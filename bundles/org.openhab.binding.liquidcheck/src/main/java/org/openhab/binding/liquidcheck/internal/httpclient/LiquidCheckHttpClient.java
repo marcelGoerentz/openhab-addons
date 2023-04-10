@@ -49,7 +49,13 @@ public class LiquidCheckHttpClient {
     public LiquidCheckHttpClient(LiquidCheckConfiguration config, HttpClient client) {
         this.config = config;
         this.client = client;
-        startClient();
+        if (!client.isStarted()) {
+            try {
+                client.start();
+            } catch (Exception e) {
+                logger.warn("Could not start client. {}", e.getMessage());
+            }
+        }
     }
 
     /**
@@ -63,7 +69,8 @@ public class LiquidCheckHttpClient {
     public String pollData() throws InterruptedException, TimeoutException, ExecutionException {
         String uri = "http://" + config.hostname + "/infos.json";
         Request request = client.newRequest(uri).method(HttpMethod.GET)
-                .timeout(config.connecionTimeout, TimeUnit.SECONDS).followRedirects(false);
+                .timeout(config.connectionTimeout, TimeUnit.SECONDS).followRedirects(false);
+        logger.debug("Polling for data");
         ContentResponse response = request.send();
         return response.getContentAsString();
     }
@@ -87,14 +94,6 @@ public class LiquidCheckHttpClient {
         return response.getContentAsString();
     }
 
-    public void startClient() {
-        try {
-            client.start();
-        } catch (Exception e) {
-            logger.debug("Couldn't start client: {}", e.getMessage());
-        }
-    }
-
     /**
      * The isConnected method will return the state of the http client
      * 
@@ -102,6 +101,6 @@ public class LiquidCheckHttpClient {
      */
     public boolean isConnected() {
         String state = this.client.getState();
-        return "STARTED".equals(state) ? true : false;
+        return "STARTED".equals(state);
     }
 }
