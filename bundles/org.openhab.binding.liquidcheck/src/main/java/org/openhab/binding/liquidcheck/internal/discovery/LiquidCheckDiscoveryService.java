@@ -12,6 +12,11 @@
  */
 package org.openhab.binding.liquidcheck.internal.discovery;
 
+import static org.openhab.binding.liquidcheck.internal.LiquidCheckBindingConstants.PROPERTY_HOSTNAME;
+import static org.openhab.binding.liquidcheck.internal.LiquidCheckBindingConstants.PROPERTY_IP;
+import static org.openhab.binding.liquidcheck.internal.LiquidCheckBindingConstants.PROPERTY_NAME;
+import static org.openhab.binding.liquidcheck.internal.LiquidCheckBindingConstants.PROPERTY_SECURITY_CODE;
+import static org.openhab.binding.liquidcheck.internal.LiquidCheckBindingConstants.PROPERTY_SSID;
 import static org.openhab.binding.liquidcheck.internal.LiquidCheckBindingConstants.SUPPORTED_THING_TYPES_UIDS;
 import static org.openhab.binding.liquidcheck.internal.LiquidCheckBindingConstants.THING_TYPE_LIQUID_CHECK;
 
@@ -22,8 +27,10 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -38,6 +45,7 @@ import org.openhab.core.config.discovery.DiscoveryResult;
 import org.openhab.core.config.discovery.DiscoveryResultBuilder;
 import org.openhab.core.config.discovery.DiscoveryService;
 import org.openhab.core.io.net.http.HttpClientFactory;
+import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingUID;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -73,6 +81,11 @@ public class LiquidCheckDiscoveryService extends AbstractDiscoveryService {
      */
     @Override
     protected void startScan() {
+        try {
+            httpClient.start();
+        } catch (Exception exception) {
+            logger.debug("Couldn't start client: {}", exception.getMessage());
+        }
         scheduler.execute(liquidCheckDiscoveryRunnable());
     }
 
@@ -81,6 +94,11 @@ public class LiquidCheckDiscoveryService extends AbstractDiscoveryService {
      */
     @Override
     protected synchronized void stopScan() {
+        try {
+            httpClient.stop();
+        } catch (Exception e) {
+            logger.debug("Couldn't stop client: {}", e.getMessage());
+        }
         super.stopScan();
         removeOlderResults(getTimestampOfLastScan());
     }
@@ -120,9 +138,9 @@ public class LiquidCheckDiscoveryService extends AbstractDiscoveryService {
                                 }
                             }
                         } catch (TimeoutException e) {
-                            logger.debug("TimeOut: {}", e.getMessage());
+                            logger.debug("TimeOut!");
                         } catch (ExecutionException e) {
-                            logger.debug("ExecutionException: {}", e.getMessage());
+                            logger.debug("ExecutionException!");
                         } catch (InterruptedException e) {
                             Thread.currentThread().interrupt();
                         }
@@ -175,7 +193,7 @@ public class LiquidCheckDiscoveryService extends AbstractDiscoveryService {
             String[] adressStrings = inetAddress.getHostAddress().split("[.]");
             String subnet = adressStrings[0] + "." + adressStrings[1] + "." + adressStrings[2];
             int timeout = 50;
-            for (int i = 0; i < 255; i++) {
+            for (int i = 1; i < 255; i++) {
                 String host = subnet + "." + i;
                 if (!inetAddress.getHostAddress().equals(host)) {
                     if (InetAddress.getByName(host).isReachable(timeout)) {
@@ -195,7 +213,33 @@ public class LiquidCheckDiscoveryService extends AbstractDiscoveryService {
     private void buildDiscoveryResult(CommData response, Boolean isHostname) {
         ThingUID thingUID = new ThingUID(THING_TYPE_LIQUID_CHECK, response.payload.device.uuid);
         DiscoveryResult dResult = DiscoveryResultBuilder.create(thingUID)
-                .withProperties(response.createPropertyMap(isHostname)).withLabel(response.payload.device.name).build();
+                .withProperties(createPropertyMap(response, isHostname)).withLabel(response.payload.device.name)
+                .build();
         thingDiscovered(dResult);
+    }
+
+    /**
+     * This method creates the property map for the discovery result
+     * 
+     * @param response
+     * @return A map with the properties
+     */
+    private Map<String, Object> createPropertyMap(CommData response, Boolean isHostname) {
+        Map<String, Object> properties = new HashMap<>();
+        properties.put(Thing.PROPERTY_FIRMWARE_VERSION, response.payload.device.firmware);
+        properties.put(Thing.PROPERTY_HARDWARE_VERSION, response.payload.device.hardware);
+        properties.put(PROPERTY_NAME, response.payload.device.name);
+        properties.put(Thing.PROPERTY_VENDOR, response.payload.device.manufacturer);
+        properties.put(Thing.PROPERTY_SERIAL_NUMBER, response.payload.device.uuid);
+        properties.put(PROPERTY_SECURITY_CODE, response.payload.device.security.code);
+        properties.put(PROPERTY_IP, response.payload.wifi.station.ip);
+        properties.put(Thing.PROPERTY_MAC_ADDRESS, response.payload.wifi.station.mac);
+        properties.put(PROPERTY_SSID, response.payload.wifi.accessPoint.ssid);
+        if (isHostname) {
+            properties.put(PROPERTY_HOSTNAME, response.payload.wifi.station.hostname);
+        } else {
+            properties.put(PROPERTY_HOSTNAME, response.payload.wifi.station.ip);
+        }
+        return properties;
     }
 }
