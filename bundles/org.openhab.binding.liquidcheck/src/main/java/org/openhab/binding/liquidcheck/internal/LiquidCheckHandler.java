@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2022 Contributors to the openHAB project
+ * Copyright (c) 2010-2023 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -156,9 +156,7 @@ public class LiquidCheckHandler extends BaseThingHandler {
                         double fillIndicator = (double) response.payload.measure.content / config.maxContent * 100;
                         updateState(FILL_INDICATOR_CHANNEL, new QuantityType<>(fillIndicator, Units.PERCENT));
                     }
-                    if (thing.getStatus().equals(ThingStatus.OFFLINE)
-                            || thing.getStatus().equals(ThingStatus.UNINITIALIZED)
-                            || thing.getStatus().equals(ThingStatus.UNKNOWN)) {
+                    if (!thing.getStatus().equals(ThingStatus.ONLINE)) {
                         updateStatus(ThingStatus.ONLINE);
                     }
                 } else {
