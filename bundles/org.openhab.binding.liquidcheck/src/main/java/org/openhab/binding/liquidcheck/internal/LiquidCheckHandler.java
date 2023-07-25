@@ -69,6 +69,8 @@ public class LiquidCheckHandler extends BaseThingHandler {
 
     private @Nullable ScheduledFuture<?> polling;
 
+    private boolean measuringStarted = false;
+
     public LiquidCheckHandler(Thing thing, HttpClient httpClient) {
         super(thing);
         this.httpClient = httpClient;
@@ -83,6 +85,9 @@ public class LiquidCheckHandler extends BaseThingHandler {
                     LiquidCheckHttpClient client = this.client;
                     if (client != null && client.isConnected()) {
                         String response = client.measureCommand();
+                        synchronized (this) {
+                            measuringStarted = true;
+                        }
                         CommData commandResponse = new Gson().fromJson(response, CommData.class);
                         if (commandResponse != null && !commandResponse.header.name.equals("")) {
                             if (!"success".equals(commandResponse.context.status)) {
@@ -97,7 +102,6 @@ public class LiquidCheckHandler extends BaseThingHandler {
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
-                updateState(channelUID, OnOffType.OFF);
             }
         }
     }
@@ -142,6 +146,13 @@ public class LiquidCheckHandler extends BaseThingHandler {
                         oldProps = properties;
                         updateProperties(properties);
                     }
+                    synchronized (this) {
+                        if (measuringStarted) {
+                            measuringStarted = false;
+                            updateState(MEASURE_CHANNEL, OnOffType.OFF);
+                        }
+                    }
+
                     updateState(CONTENT_CHANNEL, new QuantityType<>(response.payload.measure.content, Units.LITRE));
                     updateState(LEVEL_CHANNEL, new QuantityType<>(response.payload.measure.level, SIUnits.METRE));
                     updateState(RAW_CONTENT_CHANNEL,
