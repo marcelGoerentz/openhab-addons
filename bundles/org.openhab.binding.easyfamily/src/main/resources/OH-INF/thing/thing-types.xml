@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<thing:thing-descriptions bindingId="easyfamily"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
+
+	<!-- Supported easy devices -->
+	<thing-type id="easyE4" listed="true"
+		extensible="inputs,outputs,markers,markerBytes,markerWords,markerDoubleWords,analogInputs,analogOutputs,netMarkers,netMarkerBytes,netMarkerWords,netMarkerDoubleWords">
+		<label>easyE4</label>
+		<description>@text/easyE4Description</description>
+
+		<channels>
+			<channel id="programState" typeId="programState">
+				<label>@text/programStateChannel</label>
+			</channel>
+			<channel id="BUSState" typeId="ioxState">
+				<label>@text/busState</label>
+			</channel>
+		</channels>
+
+		<representation-property>serialNumber</representation-property>
+
+		<config-description-ref uri="thing-type:easyfamily:easyE4"/>
+
+	</thing-type>
+
+</thing:thing-descriptions>

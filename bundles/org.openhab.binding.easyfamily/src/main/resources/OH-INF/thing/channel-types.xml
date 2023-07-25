@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<thing:thing-descriptions bindingId="easyfamily"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
+
+	<channel-type id="programState">
+		<item-type>Switch</item-type>
+		<label>@text/programStateLabel</label>
+		<description>@text/programStateDescription</description>
+		<state readOnly="false">
+			<options>
+				<option value="RUN">Running</option>
+				<option value="STOP">Stopped</option>
+			</options>
+		</state>
+		<autoUpdatePolicy>veto</autoUpdatePolicy>
+	</channel-type>
+
+	<channel-type id="ioxState">
+		<item-type>Switch</item-type>
+		<label>@text/ioxState</label>
+		<description>@text/ioxStateDescription</description>
+		<state readOnly="true">
+			<options>
+				<option value="RUN">Running</option>
+				<option value="STOP">Stopped</option>
+			</options>
+		</state>
+		<autoUpdatePolicy>veto</autoUpdatePolicy>
+	</channel-type>
+
+	<channel-type id="inputs">
+		<item-type>Switch</item-type>
+		<label>@text/inputs</label>
+		<description>@text/inputsDescription</description>
+		<state readOnly="true"/>
+		<autoUpdatePolicy>veto</autoUpdatePolicy>
+	</channel-type>
+
+	<channel-type id="outputs">
+		<item-type>Switch</item-type>
+		<label>@text/outputs</label>
+		<description>@text/outputsDescription</description>
+		<state readOnly="true"/>
+		<autoUpdatePolicy>veto</autoUpdatePolicy>
+	</channel-type>
+
+	<channel-type id="markers">
+		<item-type>Switch</item-type>
+		<label>@text/markers</label>
+		<description>@text/markersDescription</description>
+		<state readOnly="false"/>
+		<autoUpdatePolicy>veto</autoUpdatePolicy>
+	</channel-type>
+
+	<channel-type id="markerBytes">
+		<item-type>Number</item-type>
+		<label>@text/markerBytes</label>
+		<description>@text/markerBytesDescription</description>
+		<state readOnly="false" min="0" max="255" step="1"/>
+		<autoUpdatePolicy>veto</autoUpdatePolicy>
+	</channel-type>
+
+	<channel-type id="markerWords">
+		<item-type>Number</item-type>
+		<label>@text/markerWords</label>
+		<description>@text/markerWordsDescription</description>
+		<state readOnly="false" min="0" max="65535" step="1"/>
+		<autoUpdatePolicy>veto</autoUpdatePolicy>
+	</channel-type>
+
+	<channel-type id="markerDoubleWords">
+		<item-type>Number</item-type>
+		<label>@text/markerDoubleWords</label>
+		<description>@text/markerDoubleWordsDescription</description>
+		<state readOnly="false" min="-2147483648" max="2147483647" step="1"/>
+		<autoUpdatePolicy>veto</autoUpdatePolicy>
+	</channel-type>
+
+	<channel-type id="netMarkers">
+		<item-type>Switch</item-type>
+		<label>@text/netMarkers</label>
+		<description>@text/netMarkersDescription</description>
+		<state readOnly="false"/>
+		<autoUpdatePolicy>veto</autoUpdatePolicy>
+	</channel-type>
+
+	<channel-type id="netMarkerBytes">
+		<item-type>Number</item-type>
+		<label>@text/netMarkerBytes</label>
+		<description>@text/netMarkerBytesDescription</description>
+		<state readOnly="false" min="0" max="255" step="1"/>
+		<autoUpdatePolicy>veto</autoUpdatePolicy>
+	</channel-type>
+
+	<channel-type id="netMarkerWords">
+		<item-type>Number</item-type>
+		<label>@text/netMarkerWords</label>
+		<description>@text/netMarkerWordsDescription</description>
+		<state readOnly="false" min="0" max="65535" step="1"/>
+		<autoUpdatePolicy>veto</autoUpdatePolicy>
+	</channel-type>
+
+	<channel-type id="netMarkerDoubleWords">
+		<item-type>Number</item-type>
+		<label>@text/netMarkerDoubleWords</label>
+		<description>@text/netMarkerDoubleWordsDescription</description>
+		<state readOnly="false" min="-2147483648" max="2147483647" step="1"/>
+		<autoUpdatePolicy>veto</autoUpdatePolicy>
+	</channel-type>
+
+	<channel-type id="analogInputs">
+		<item-type>Number</item-type>
+		<label>@text/analogInputs</label>
+		<description>@text/analogInputsDescription</description>
+		<state readOnly="true"/>
+		<autoUpdatePolicy>veto</autoUpdatePolicy>
+	</channel-type>
+
+	<channel-type id="analogOutputs">
+		<item-type>Number</item-type>
+		<label>@text/analogOutputs</label>
+		<description>@text/analogOutputsDescription</description>
+		<state readOnly="true"/>
+		<autoUpdatePolicy>veto</autoUpdatePolicy>
+	</channel-type>
+</thing:thing-descriptions>

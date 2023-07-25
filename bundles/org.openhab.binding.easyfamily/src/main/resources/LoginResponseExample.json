@@ -1,0 +1,53 @@
+{
+    "SESSIONKEY":"a35a4e4ba6c8fb84c3a88c8f9d6b979e551714f6",
+    "SYSINFO":{
+        "STATE":"RUN",
+        "EXTSTATE":{
+            "EXTDATA":"1",
+            "EXTCFG":"9",
+            "EXTBUS":"1",
+            "EXTCYC":"2"
+        },
+        "DATE":"2022-11-29",
+        "TIME":"09:22:46",
+        "MAC":"00-80-99-0c-15-87",
+        "IPSET":{
+            "ACTIP":"192.168.2.140",
+            "IPMODE":"1",
+            "ACTMASK":"255.255.248.0",
+            "ACTGW":"192.168.0.1"
+        },
+        "VERS":"1.41",
+        "BUILD":"628",
+        "DEVNAME":"UV-OG",
+        "TYPE":"E4-UC-12RCX1",
+        "DEVLOCATION":{
+            "LONGITUDE":"7438060",
+            "LATITUDE":"50766520"
+        },
+        "NETID":0,
+        "ADMIN":false,
+        "DNS":"0.0.0.0",
+        "ETHERNETDOMAIN":" goerentz.internal",
+        "EASYNETINFO":{
+            "SELFID":0,
+            "DETAILS":[]
+        },
+        "PROGNAME":"",
+        "BTLVERSION":"1.01:0008",
+        "SERIALNUMBER":"324465",
+        "DATEOFMANUFACTURE":"2022-04-05",
+        "DEVICEIO":"8DI(4AI), 4DO relays",
+        "WEBSERPORT":443,
+        "ENABLEIOREAD":1,
+        "ALLOWANONYMOUS":0,
+        "PARAMLIST":1,
+        "ACCESS_CLOCK":1,
+        "ACCESS_MODE":1,
+        "ACCESS_PARAM":1,
+        "ACCESS_EMAIL":1,
+        "ACCESS_KEYS":1,
+        "MACCESS":[1,512],
+        "NACCESS":[1,32]
+    }
+}

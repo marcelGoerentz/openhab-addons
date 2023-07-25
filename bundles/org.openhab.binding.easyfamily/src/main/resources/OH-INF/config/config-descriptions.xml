@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config-description:config-descriptions
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:config-description="https://openhab.org/schemas/config-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/config-description/v1.0.0
+		https://openhab.org/schemas/config-description-1.0.0.xsd">
+
+	<config-description uri="thing-type:easyfamily:easyE4">
+		<parameter-group name="network">
+			<label>@text/networkconfig</label>
+			<description>@text/networkconfigDescription</description>
+		</parameter-group>
+		<parameter-group name="authentication">
+			<label>@text/authentication</label>
+			<description>@text/authenticationDescription</description>
+		</parameter-group>
+		<parameter-group name="connection">
+			<label>@text/connection</label>
+			<description>@text/connectionDescription</description>
+		</parameter-group>
+		<parameter-group name="commentsAndChannels">
+			<label>@text/commentaryList</label>
+			<description>@text/commentaryListDescription</description>
+		</parameter-group>
+
+		<parameter name="ipAddress" type="text" required="true" groupName="network">
+			<context>network-address</context>
+			<label>@text/ipAddress</label>
+			<description>@text/ipAddressDescription</description>
+		</parameter>
+
+		<parameter name="encryption" type="boolean" required="true" groupName="network">
+			<label>@text/encryption</label>
+			<description>@text/encryptionDescription</description>
+			<default>false</default>
+		</parameter>
+
+		<parameter name="port" type="integer" min="1" max="655535" step="1" required="true" groupName="network">
+			<label>@text/port</label>
+			<description>@text/portDescription</description>
+			<default>80</default>
+		</parameter>
+
+		<parameter name="connectionTimeOut" type="decimal" min="2000" max="65535" step="5" required="false"
+			groupName="connection">
+			<label>@text/connectionTimeOut</label>
+			<description>@text/connectionTimeOutDescription</description>
+			<default>5000</default>
+		</parameter>
+
+		<parameter name="pollingInterval" type="decimal" min="250" max="5000" step="10" required="false"
+			groupName="connection">
+			<label>@text/pollingInterval</label>
+			<description>@text/pollingIntervalDescription</description>
+			<default>1000</default>
+		</parameter>
+
+		<parameter name="apiKey" type="text" required="true" groupName="authentication">
+			<label>@text/apiKey</label>
+			<description>@text/apiKeyDescription</description>
+		</parameter>
+
+		<parameter name="loadCommentaryList" type="boolean" required="true" groupName="commentsAndChannels">
+			<label>@text/commentaryList</label>
+			<description>@text/commentaryListDescription</description>
+			<default>true</default>
+		</parameter>
+	</config-description>
+</config-description:config-descriptions>
