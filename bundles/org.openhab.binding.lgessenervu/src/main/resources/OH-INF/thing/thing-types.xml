@@ -1,0 +1,576 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<thing:thing-descriptions bindingId="lgessenervu"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
+
+
+	<thing-type id="powerrouter">
+		<label>LGEssEnervu Powerrouter thing</label>
+		<description>Binding for LG Ess Enervu powerrouter/batteries</description>
+
+		<channels>
+			<!-- grid -->
+			<channel id="currentPowerFromGrid" typeId="current_power_consumption_from_grid"/>
+			<channel id="dailyPowerFromGrid" typeId="daily_power_consumption_from_grid"/>
+			<channel id="monthlyPowerFromGrid" typeId="monthly_power_consumption_from_grid"/>
+			<channel id="currentPowerToGrid" typeId="current_power_provided_to_grid"/>
+			<channel id="dailyPowerToGrid" typeId="daily_power_provided_to_grid"/>
+			<channel id="monthlyPowerToGrid" typeId="monthly_power_provided_to_grid"/>
+			<!-- PV -->
+			<channel id="currentPowerFromPV" typeId="current_power_provided_by_pv"/>
+			<channel id="dailyPowerFromPV" typeId="daily_power_provided_by_pv"/>
+			<channel id="monthlyPowerFromPV" typeId="monthly_power_provided_by_pv"/>
+			<channel id="selfConsumption" typeId="selfConsumption"/>
+
+			<channel id="string1CurrentPotential" typeId="currentPotentialString1"/>
+			<channel id="string2CurrentPotential" typeId="currentPotentialString2"/>
+			<channel id="string3CurrentPotential" typeId="currentPotentialString3"/>
+			<channel id="string4CurrentPotential" typeId="currentPotentialString4"/>
+			<channel id="string5CurrentPotential" typeId="currentPotentialString5"/>
+
+			<channel id="string1CurrentCurrent" typeId="currentCurrentString1"/>
+			<channel id="string2CurrentCurrent" typeId="currentCurrentString2"/>
+			<channel id="string3CurrentCurrent" typeId="currentCurrentString3"/>
+			<channel id="string4CurrentCurrent" typeId="currentCurrentString4"/>
+			<channel id="string5CurrentCurrent" typeId="currentCurrentString5"/>
+
+			<channel id="string1CurrentPower" typeId="currentPowerString1"/>
+			<channel id="string2CurrentPower" typeId="currentPowerString2"/>
+			<channel id="string3CurrentPower" typeId="currentPowerString3"/>
+			<channel id="string4CurrentPower" typeId="currentPowerString4"/>
+			<channel id="string5CurrentPower" typeId="currentPowerString5"/>
+
+
+			<!-- battery -->
+			<channel id="batterySoc" typeId="current_battery_soc"/>
+			<channel id="batterySafetySoc" typeId="battery_safety_soc"/>
+			<channel id="batteryStatus" typeId="current_battery_status"/>
+			<channel id="batteryWintermode" typeId="current_battery_wintermode_status"/>
+			<channel id="currentPowerChargingToBattery" typeId="current_charging_power_battery"/>
+			<channel id="dailyBatteryCharge" typeId="daily_charging_power_battery"/>
+			<channel id="monthlyBatteryCharge" typeId="monthly_charging_power_battery"/>
+			<channel id="currentPowerDischargingFromBattery" typeId="current_discharging_power_battery"/>
+			<channel id="dailyPowerDischargingFromBattery" typeId="daily_discharging_power_battery"/>
+			<channel id="monthlyPowerDischargingFromBattery" typeId="monthly_discharging_power_battery"/>
+
+			<channel id="lowbattery" typeId="lowbattery"/>
+			<channel id="trigger_battery_status" typeId="trigger_battery_status"/>
+
+			<!-- load -->
+			<channel id="currentTotalPowerConsumption" typeId="current_power_consumption_total"/>
+			<channel id="dailyTotalPowerConsumption" typeId="daily_power_consumption_total"/>
+			<channel id="monthlyTotalPowerConsumption" typeId="monthly_power_consumption_total"/>
+			<channel id="currentDirectPowerConsumption" typeId="current_power_consumption_direct"/>
+			<channel id="dailyDirectPowerConsumption" typeId="daily_power_consumption_direct"/>
+			<channel id="monthlyDirectPowerConsumption" typeId="monthly_power_consumption_direct"/>
+			<!-- status -->
+			<channel id="isDirectConsuming" typeId="isDirectConsuming"/>
+			<channel id="isBatteryCharging" typeId="isBatteryCharging"/>
+			<channel id="isBatteryDischarging" typeId="isBatteryDischarging"/>
+			<channel id="isGridSelling" typeId="isGridSelling"/>
+			<channel id="isGridBuying" typeId="isGridBuying"/>
+			<channel id="isChargingFromGrid" typeId="isChargingFromGrid"/>
+			<channel id="monthlyCO2Savings" typeId="monthlyCO2Saving"/>
+			<channel id="monthlyEarnings" typeId="monthlyEarnings"/>
+			<channel id="monthlyPaid" typeId="monthlyPaid"/>
+			<channel id="monthlyMoneySavings" typeId="monthlyMoneySavings"/>
+
+			<!-- comfort trigger -->
+			<channel id="trigger_powergen_status" typeId="trigger_powergen_status"/>
+
+
+		</channels>
+
+		<config-description>
+			<parameter-group name="general">
+				<label>General</label>
+				<description>General parameters</description>
+				<context>String</context>
+				<advanced>false</advanced>
+			</parameter-group>
+			<parameter-group name="local">
+				<label>LAN API related</label>
+				<description>Password used for local access of device</description>
+				<context>String</context>
+				<advanced>false</advanced>
+			</parameter-group>
+			<parameter-group name="cloud">
+				<label>Cloud API related parameter</label>
+				<description>Login-Settings for cloud data</description>
+				<context>String</context>
+				<advanced>false</advanced>
+			</parameter-group>
+			<parameter-group name="comforttrigger">
+				<label>Powergeneration trigger</label>
+				<description>Settings for trigger which is raised once power reaches threshold</description>
+				<context>String</context>
+				<advanced>false</advanced>
+			</parameter-group>
+
+
+
+			<parameter name="dataSourceCloud" type="boolean" groupName="general">
+				<label>Use Cloud API</label>
+				<description>If "cloud" is selected data will be collected from https://enervu.lg-ess.com/</description>
+				<default>false</default>
+			</parameter>
+			<parameter name="kwhPrice" type="decimal" required="false" groupName="general">
+				<label>Price per kWh</label>
+				<description>kWh price paid to local provider (e.g. 0.28 EUR)</description>
+				<default>0.28</default>
+			</parameter>
+			<parameter name="kwhPriceSell" type="decimal" required="false" groupName="general">
+				<label>Price per kWh (selling)</label>
+				<description>kWh price paid by local provider (e.g. 0.8 EUR)</description>
+				<default>0.8</default>
+			</parameter>
+			<parameter name="co2Factor" type="decimal" required="false" groupName="general">
+				<label>CO2-Factor</label>
+				<description>Factor of powermix used for calculation of CO2 savings</description>
+				<default>0.71</default>
+			</parameter>
+			<parameter name="lowbatterythreshold" type="integer" required="false" min="0" max="100" unit="%"
+				groupName="general">
+				<label>Lowbattery SOC threshold</label>
+				<description>Battery SOC is considered low when equal or below this value</description>
+				<default>20</default>
+			</parameter>
+			<parameter name="timeout" type="integer" required="false" min="1" max="12" unit="s" groupName="general">
+				<label>Timeout</label>
+				<description>The timeout for reading from the device in seconds.</description>
+				<default>5</default>
+				<advanced>true</advanced>
+			</parameter>
+
+			<parameter name="hostName" type="text" groupName="local">
+				<context>network-address</context>
+				<label>Hostname / IP</label>
+				<description>Hostname or IP address of the local powerrouter device.</description>
+			</parameter>
+			<parameter name="passwordLocal" type="text" required="false" groupName="local">
+				<context>password</context>
+				<label>Password</label>
+				<description>Password of the local device (see doc on how to get password))</description>
+			</parameter>
+			<parameter name="refreshInterval" type="integer" required="false" min="1" unit="s" groupName="local">
+				<label>Refresh Interval</label>
+				<description>The refresh interval in seconds.</description>
+				<default>60</default>
+			</parameter>
+			<parameter name="user" type="text" required="false" groupName="cloud">
+				<label>Username / eMail</label>
+				<description>Username for the login @ https://enervu.lg-ess.com/ </description>
+			</parameter>
+			<parameter name="passwordCloud" type="text" required="false" groupName="cloud">
+				<context>password</context>
+				<label>Password</label>
+				<description>The Password used for the login @ https://enervu.lg-ess.com/</description>
+			</parameter>
+			<parameter name="refreshIntervalCloud" type="integer" required="false" min="60" unit="s" groupName="cloud">
+				<label>Refresh Interval</label>
+				<description>The refresh interval in seconds.</description>
+				<default>60</default>
+			</parameter>
+
+			<!-- comfort trigger -->
+			<parameter name="triggergeneratedpowerthreshold" type="integer" required="false" min="60" unit="W"
+				groupName="comforttrigger">
+				<label>Generated power threshold for event</label>
+				<description>Threshold of generated power[W] by PV to trigger event</description>
+				<default>2000</default>
+			</parameter>
+			<parameter name="triggergeneratedpowerthresholdtime" type="integer" required="false" min="0" unit="s"
+				groupName="comforttrigger">
+				<label>Time generated power needs to be above threshold until trigger is set (0 = instant)</label>
+				<description>Seconds to wait</description>
+				<default>300</default>
+			</parameter>
+			<parameter name="triggergeneratedpowerthresholdresettime" type="integer" required="false" min="0" unit="s"
+				groupName="comforttrigger">
+				<label>Time generated power needs to be below threshold until a new trigger may start</label>
+				<description>Seconds to wait </description>
+				<default>300</default>
+			</parameter>
+
+
+
+		</config-description>
+
+	</thing-type>
+
+	<channel-type id="current_power_consumption_from_grid">
+		<item-type>Number:Power</item-type>
+		<label>Consumption from grid (current)</label>
+		<description>Current power consumption from grid</description>
+		<state readOnly="true" pattern="%.1f kW"></state>
+	</channel-type>
+
+	<channel-type id="daily_power_consumption_from_grid">
+		<item-type>Number:Energy</item-type>
+		<label>Consumption from grid (daily)</label>
+		<description>Total daily energy consumption</description>
+		<state readOnly="true" pattern="%.1f kWh"></state>
+	</channel-type>
+
+	<channel-type id="monthly_power_consumption_from_grid">
+		<item-type>Number:Energy</item-type>
+		<label>Consumption from grid (monthly)</label>
+		<description>Total monthly energy consumption</description>
+		<state readOnly="true" pattern="%.1f kWh"></state>
+	</channel-type>
+
+	<channel-type id="current_power_provided_to_grid">
+		<item-type>Number:Power</item-type>
+		<label>Provided power to grid (current)</label>
+		<description>Current power provided to grid</description>
+		<state readOnly="true" pattern="%.1f kW"></state>
+	</channel-type>
+	<channel-type id="daily_power_provided_to_grid">
+		<item-type>Number:Energy</item-type>
+		<label>Provided energy to grid (daily)</label>
+		<description>Total daily energy provided</description>
+		<state readOnly="true" pattern="%.1f kWh"></state>
+	</channel-type>
+	<channel-type id="monthly_power_provided_to_grid">
+		<item-type>Number:Energy</item-type>
+		<label>Provided energy to grid (monthly)</label>
+		<description>Total monthly energy provided</description>
+		<state readOnly="true" pattern="%.1f kWh"></state>
+	</channel-type>
+
+	<!-- PV -->
+	<channel-type id="current_power_provided_by_pv">
+		<item-type>Number:Power</item-type>
+		<label>Production from PV (current)</label>
+		<description>Current production from PV</description>
+		<state readOnly="true" pattern="%d W"></state>
+	</channel-type>
+	<channel-type id="daily_power_provided_by_pv">
+		<item-type>Number:Energy</item-type>
+		<label>Production from PV (daily)</label>
+		<description>Total daily energy production</description>
+		<state readOnly="true" pattern="%.1f kWh"></state>
+	</channel-type>
+	<channel-type id="monthly_power_provided_by_pv">
+		<item-type>Number:Energy</item-type>
+		<label>Production from PV (monthly)</label>
+		<description>Total monthly energy production</description>
+		<state readOnly="true" pattern="%.1f kWh"></state>
+	</channel-type>
+
+	<channel-type id="selfConsumption">
+		<item-type>Number</item-type>
+		<label>Self consumption (daily)</label>
+		<description>Percentage of power produced by PV consumed on your own</description>
+		<state readOnly="true" pattern="%d %%"></state>
+	</channel-type>
+
+	<channel-type id="currentPotentialString1">
+		<item-type>Number:ElectricPotential</item-type>
+		<label>Current DC Voltage of String 1</label>
+		<description>Current electric potential at string 1 of pv</description>
+		<state readOnly="true" pattern="%d V"></state>
+	</channel-type>
+	<channel-type id="currentPotentialString2">
+		<item-type>Number:ElectricPotential</item-type>
+		<label>Current DC Voltage of String 2</label>
+		<description>Current electric potential at string 2 of pv</description>
+		<state readOnly="true" pattern="%d V"></state>
+	</channel-type>
+	<channel-type id="currentPotentialString3">
+		<item-type>Number:ElectricPotential</item-type>
+		<label>Current DC Voltage of String 3</label>
+		<description>Current electric potential at string 3 of pv</description>
+		<state readOnly="true" pattern="%d V"></state>
+	</channel-type>
+	<channel-type id="currentPotentialString4">
+		<item-type>Number:ElectricPotential</item-type>
+		<label>Current DC Voltage of String 4</label>
+		<description>Current electric potential at string 4 of pv</description>
+		<state readOnly="true" pattern="%d V"></state>
+	</channel-type>
+	<channel-type id="currentPotentialString5">
+		<item-type>Number:ElectricPotential</item-type>
+		<label>Current DC Voltage of String 5</label>
+		<description>Current electric potential at string 5 of pv</description>
+		<state readOnly="true" pattern="%d V"></state>
+	</channel-type>
+
+	<channel-type id="currentCurrentString1">
+		<item-type>Number:ElectricCurrent</item-type>
+		<label>Current DC Current of String 1</label>
+		<description>Current electric Current at string 1 of pv</description>
+		<state readOnly="true" pattern="%d A"></state>
+	</channel-type>
+	<channel-type id="currentCurrentString2">
+		<item-type>Number:ElectricCurrent</item-type>
+		<label>Current DC Current of String 2</label>
+		<description>Current electric Current at string 2 of pv</description>
+		<state readOnly="true" pattern="%d A"></state>
+	</channel-type>
+	<channel-type id="currentCurrentString3">
+		<item-type>Number:ElectricCurrent</item-type>
+		<label>Current DC Current of String 3</label>
+		<description>Current electric Current at string 3 of pv</description>
+		<state readOnly="true" pattern="%d A"></state>
+	</channel-type>
+	<channel-type id="currentCurrentString4">
+		<item-type>Number:ElectricCurrent</item-type>
+		<label>Current DC Current of String 4</label>
+		<description>Current electric Current at string 4 of pv</description>
+		<state readOnly="true" pattern="%d A"></state>
+	</channel-type>
+	<channel-type id="currentCurrentString5">
+		<item-type>Number:ElectricCurrent</item-type>
+		<label>Current DC Current of String 5</label>
+		<description>Current electric Current at string 5 of pv</description>
+		<state readOnly="true" pattern="%d A"></state>
+	</channel-type>
+
+	<channel-type id="currentPowerString1">
+		<item-type>Number:Power</item-type>
+		<label>Current DC Power of String 1</label>
+		<description>Current power at string 1 of pv</description>
+		<state readOnly="true" pattern="%d W"></state>
+	</channel-type>
+	<channel-type id="currentPowerString2">
+		<item-type>Number:Power</item-type>
+		<label>Current DC Power of String 2</label>
+		<description>Current power at string 2 of pv</description>
+		<state readOnly="true" pattern="%d W"></state>
+	</channel-type>
+	<channel-type id="currentPowerString3">
+		<item-type>Number:Power</item-type>
+		<label>Current DC Power of String 3</label>
+		<description>Current power at string 3 of pv</description>
+		<state readOnly="true" pattern="%d W"></state>
+	</channel-type>
+	<channel-type id="currentPowerString4">
+		<item-type>Number:Power</item-type>
+		<label>Current DC Power of String 4</label>
+		<description>Current power at string 4 of pv</description>
+		<state readOnly="true" pattern="%d W"></state>
+	</channel-type>
+	<channel-type id="currentPowerString5">
+		<item-type>Number:Power</item-type>
+		<label>Current DC Power of String 5</label>
+		<description>Current power at string 5 of pv</description>
+		<state readOnly="true" pattern="%d W"></state>
+	</channel-type>
+
+	<!-- battery -->
+	<channel-type id="current_battery_soc">
+		<item-type>Number</item-type>
+		<label>Current SOC state</label>
+		<description>Current battery level in [%]</description>
+		<state readOnly="true" pattern="%.1f %%"></state>
+	</channel-type>
+
+	<channel-type id="battery_safety_soc">
+		<item-type>Number</item-type>
+		<label>Safety SOC</label>
+		<description>Safety SOC of battery [%]</description>
+		<state readOnly="true" pattern="%d %%"></state>
+	</channel-type>
+
+
+	<channel-type id="current_battery_status"> <!-- status 0 = idle; 2 = discharge -->
+		<item-type>String</item-type>
+		<label>Status battery operating mode</label>
+		<description>Current battery status</description>
+		<state readOnly="true">
+			<options>
+				<option value="0">idle</option>
+				<option value="1">charging</option>
+				<option value="2">discharging</option>
+			</options>
+		</state>
+	</channel-type>
+
+	<channel-type id="trigger_battery_status">
+		<kind>trigger</kind>
+		<label>Triggered once on depleted,low and charged</label>
+		<event>
+			<options>
+				<option value="DEPLETED">DEPLETED</option>
+				<option value="LOWBATTERY">LOWBATTERY</option>
+				<option value="CHARGED">CHARGED</option>
+			</options>
+		</event>
+	</channel-type>
+
+	<channel-type id="lowbattery"> <!-- homekit crap fake apple shit -->
+		<item-type>Switch</item-type>
+		<label>LowBattery</label>
+		<description>Set when battery is low (configurable - default less than 20% SOC)</description>
+		<state readOnly="true"></state>
+	</channel-type>
+
+
+
+
+	<channel-type id="current_battery_wintermode_status"> <!-- status 0 = idle; 2 = discharge -->
+		<item-type>Switch</item-type>
+		<label>Status Wintermode</label>
+		<description>Current status of wintermode</description>
+		<state readOnly="true"></state>
+	</channel-type>
+
+	<channel-type id="current_charging_power_battery">
+		<item-type>Number:Power</item-type>
+		<label>Charging power battery (current)</label>
+		<description>Current charging power of battery </description>
+		<state readOnly="true" pattern="%.1f kW"></state>
+	</channel-type>
+
+	<channel-type id="daily_charging_power_battery">
+		<item-type>Number:Energy</item-type>
+		<label>Charging energy battery (daily)</label>
+		<description>Daily charging energy of battery </description>
+		<state readOnly="true" pattern="%.1f kWh"></state>
+	</channel-type>
+
+	<channel-type id="monthly_charging_power_battery">
+		<item-type>Number:Energy</item-type>
+		<label>Charging energy battery (monthly)</label>
+		<description>Monthly charging energy of battery </description>
+		<state readOnly="true" pattern="%.1f kWh"></state>
+	</channel-type>
+
+	<channel-type id="current_discharging_power_battery">
+		<item-type>Number:Power</item-type>
+		<label>Discharging power from battery (current)</label>
+		<description>Current power provided by battery </description>
+		<state readOnly="true" pattern="%.1f kW"></state>
+	</channel-type>
+	<channel-type id="daily_discharging_power_battery">
+		<item-type>Number:Energy</item-type>
+		<label>Discharging energy from battery (daily)</label>
+		<description>Daily energy provided by battery </description>
+		<state readOnly="true" pattern="%.1f kWh"></state>
+	</channel-type>
+	<channel-type id="monthly_discharging_power_battery">
+		<item-type>Number:Energy</item-type>
+		<label>Discharging energy from battery (monthly)</label>
+		<description>Monthly energy provided by battery </description>
+		<state readOnly="true" pattern="%.1f kWh"></state>
+	</channel-type>
+
+	<!-- load -->
+	<channel-type id="current_power_consumption_total">
+		<item-type>Number:Power</item-type>
+		<label>Consumption total (current)</label>
+		<description>Current total consumption</description>
+		<state readOnly="true" pattern="%.1f kW"></state>
+	</channel-type>
+	<channel-type id="daily_power_consumption_total">
+		<item-type>Number:Energy</item-type>
+		<label>Consumption total (daily)</label>
+		<description>Daily total consumption</description>
+		<state readOnly="true" pattern="%.1f kWh"></state>
+	</channel-type>
+	<channel-type id="monthly_power_consumption_total">
+		<item-type>Number:Energy</item-type>
+		<label>Consumption total (monthly)</label>
+		<description>Monthly total consumption</description>
+		<state readOnly="true" pattern="%.1f kWh"></state>
+	</channel-type>
+
+	<channel-type id="current_power_consumption_direct">
+		<item-type>Number:Power</item-type>
+		<label>Consumption directly from PV (current)</label>
+		<description>Current direct consumption from PV</description>
+		<state readOnly="true" pattern="%.1f kW"></state>
+	</channel-type>
+	<channel-type id="daily_power_consumption_direct">
+		<item-type>Number:Energy</item-type>
+		<label>Consumption directly from PV (daily)</label>
+		<description>Daily direct consumption from PV</description>
+		<state readOnly="true" pattern="%.1f kWh"></state>
+	</channel-type>
+	<channel-type id="monthly_power_consumption_direct">
+		<item-type>Number:Energy</item-type>
+		<label>Consumption directly from PV (monthly)</label>
+		<description>Monthly direct consumption from PV</description>
+		<state readOnly="true" pattern="%.1f kWh"></state>
+	</channel-type>
+
+	<channel-type id="isDirectConsuming">
+		<item-type>Switch</item-type>
+		<label>Status direct consumption</label>
+		<description>is directly consuming from pv</description>
+		<state readOnly="true"></state>
+	</channel-type>
+
+	<channel-type id="isBatteryCharging">
+		<item-type>Switch</item-type>
+		<label>Status Charging battery</label>
+		<description>is battery currently charging</description>
+		<state readOnly="true"></state>
+	</channel-type>
+
+	<channel-type id="isBatteryDischarging">
+		<item-type>Switch</item-type>
+		<label>Status Discharging battery</label>
+		<description>is battery currently discharging</description>
+		<state readOnly="true"></state>
+	</channel-type>
+
+	<channel-type id="isGridSelling">
+		<item-type>Switch</item-type>
+		<label>Status Selling power to grid</label>
+		<description>currently selling power to grid</description>
+		<state readOnly="true"></state>
+	</channel-type>
+	<channel-type id="isGridBuying">
+		<item-type>Switch</item-type>
+		<label>Status Buying power from grid</label>
+		<description>currently buying power from grid</description>
+		<state readOnly="true"></state>
+	</channel-type>
+	<channel-type id="isChargingFromGrid">
+		<item-type>Switch</item-type>
+		<label>Status Charging battery from grid</label>
+		<description>currently charging battery from grid</description>
+		<state readOnly="true"></state>
+	</channel-type>
+	<channel-type id="monthlyCO2Saving">
+		<item-type>Number:Mass</item-type>
+		<label>Monthly CO2 saving</label>
+		<description>Monthly CO2 saving</description>
+		<state readOnly="true" pattern="%.1f %unit%"></state>
+	</channel-type>
+	<channel-type id="monthlyPaid">
+		<item-type>Number</item-type>
+		<label>Monthly cost</label>
+		<description>Monthly paid for power [EUR]</description>
+		<state readOnly="true" pattern="%.2f EUR"></state>
+	</channel-type>
+	<channel-type id="monthlyEarnings">
+		<item-type>Number</item-type>
+		<label>Monthly earnings</label>
+		<description>Monthly earnings by sold power from PV [EUR]</description>
+		<state readOnly="true" pattern="%.2f EUR"></state>
+	</channel-type>
+
+	<channel-type id="monthlyMoneySavings">
+		<item-type>Number</item-type>
+		<label>Monthly savings</label>
+		<description>Monthly savings by consuming and selling power from PV [EUR]</description>
+		<state readOnly="true" pattern="%.2f EUR"></state>
+	</channel-type>
+
+	<!-- comfort triggers -->
+	<channel-type id="trigger_powergen_status">
+		<kind>trigger</kind>
+		<label>Triggered once pv produces power above a configurable threshold for a configured time</label>
+		<event>
+			<options>
+				<option value="POWER">POWER</option>
+			</options>
+		</event>
+	</channel-type>
+
+
+</thing:thing-descriptions>

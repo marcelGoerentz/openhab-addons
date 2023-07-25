@@ -1,0 +1,88 @@
+/**
+ * Copyright (c) 2010-2022 Contributors to the openHAB project
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ */
+package org.openhab.binding.lgessenervu.internal;
+
+import org.eclipse.jdt.annotation.NonNullByDefault;
+
+/**
+ * The {@link LGEssenervuConfiguration} class contains fields mapping thing configuration parameters.
+ *
+ * @author Martin Klama - Initial contribution
+ */
+@NonNullByDefault
+public class LGEssenervuConfiguration {
+
+    /**
+     * Hostname or IP address of the device if LAN-Mode is choosen
+     */
+    public String hostName = "";
+    /**
+     * Refresh interval data is pulled
+     */
+    public int refreshInterval = 60;
+
+    /**
+     * Refresh interval data is pulled
+     */
+    public int refreshIntervalCloud = 60;
+
+    /**
+     * Timeout when a connection timeout is considered
+     */
+    public int timeout = 5;
+
+    /**
+     * Battery is considered low when below this threshold
+     */
+    public int lowbatterythreshold = 20;
+
+    /**
+     * Threshold of generated power for trigger event
+     */
+    public int triggergeneratedpowerthreshold = 2000;
+
+    /**
+     * Time to wait until event is triggered (0 = instant)
+     */
+    public int triggergeneratedpowerthresholdtime = 300; // 5min
+
+    /**
+     * Time to wait until event is triggered (0 = instant)
+     */
+    public int triggergeneratedpowerthresholdresettime = 300; // 5min
+
+    /**
+     * username/email for login to the cloud-api
+     */
+    public String user = "";
+
+    /**
+     * password for the cloud-api
+     */
+    public String passwordCloud = "";
+    /**
+     * password for the local-api
+     */
+    public String passwordLocal = "";
+
+    /**
+     * Source of the data (cloud api, lan api)
+     */
+    public boolean dataSourceCloud = false;
+    /**
+     * username/email for login to the cloud-api
+     */
+    public Double co2Factor = 0.0;
+    public Double kwhPrice = 0.0;
+    public Double kwhPriceSell = 0.0;
+}
