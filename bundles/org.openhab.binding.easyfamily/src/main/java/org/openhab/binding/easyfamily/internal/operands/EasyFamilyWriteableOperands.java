@@ -1,0 +1,37 @@
+/**
+ * Copyright (c) 2010-2021 Contributors to the openHAB project
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ */
+package org.openhab.binding.easyfamily.internal.operands;
+
+import org.openhab.core.thing.ChannelUID;
+
+public abstract class EasyFamilyWriteableOperands extends EasyFamilyOperand {
+
+    public String path;
+    public String query;
+
+    EasyFamilyWriteableOperands(String type, int number, ChannelUID uid) {
+        super(type, number, uid);
+    }
+
+    public String getPath() {
+        return this.path;
+    }
+
+    protected abstract void setPath();
+
+    public String getQuery() {
+        return this.query;
+    }
+
+    protected abstract void setQuery();
+}

@@ -96,6 +96,7 @@
 /bundles/org.openhab.binding.dwdpollenflug/ @DerOetzi
 /bundles/org.openhab.binding.dwdunwetter/ @limdul79
 /bundles/org.openhab.binding.easee/ @alexf2015
+/bundles/org.openhab.binding.easyfamily/ @marcelGoerentz
 /bundles/org.openhab.binding.echonetlite/ @mikeb01
 /bundles/org.openhab.binding.ecobee/ @mhilbush
 /bundles/org.openhab.binding.ecoflow/ @maniac103
