@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<binding:binding id="easyfamily" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:binding="https://openhab.org/schemas/binding/v1.0.0"
-	xsi:schemaLocation="https://openhab.org/schemas/binding/v1.0.0 https://openhab.org/schemas/binding-1.0.0.xsd">
+<addon:addon id="easyfamily" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:addon="https://openhab.org/schemas/addon/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/addon/v1.0.0 https://openhab.org/schemas/addon-1.0.0.xsd">
 
+	<type>binding</type>
 	<name>@text/bindingName</name>
 	<description>@text/bindingDescription</description>
-	<author>Marcel Goerentz</author>
+	<connection>local</connection>
 
-</binding:binding>
+</addon:addon>
