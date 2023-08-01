@@ -128,13 +128,13 @@ public class EasyFamilyHttpClient {
         String content = "";
         Inflater decomp = new Inflater(true);
         decomp.setInput(compressed);
-        int decompressLength = Math.round(compressed.length * 3);
+        int decompressLength = Math.round(compressed.length * 4);
         byte[] decompressed = new byte[decompressLength];
         int resultLength = decomp.inflate(decompressed);
         content = Jsoup.parse(new String(decompressed, 0, resultLength, StandardCharsets.UTF_8)).body().toString()
                 .replace("<body>", "").replace("</body>", "").strip();
         decomp.end();
-        return content;
+        return content.equals(null) ? "" : content;
     }
 
     /**

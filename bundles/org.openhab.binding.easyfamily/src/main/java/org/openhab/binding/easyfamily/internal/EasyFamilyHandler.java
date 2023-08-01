@@ -52,6 +52,7 @@ import javax.net.ssl.SSLException;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.jetty.util.URIUtil;
 import org.openhab.binding.easyfamily.internal.httpclient.EasyFamilyHttpClient;
 import org.openhab.binding.easyfamily.internal.httpclient.EasyFamilyHttpResponse;
 import org.openhab.binding.easyfamily.internal.httpclient.PingClient;
@@ -118,7 +119,7 @@ public class EasyFamilyHandler extends BaseThingHandler {
         super(thing);
         this.i18nProvider = i18nProvider;
         this.localeProvider = localeProvider;
-        this.device = new EasyDevice(thing, i18nProvider, localeProvider);
+        this.device = new EasyDevice(i18nProvider, localeProvider);
         this.config = new EasyFamilyConfiguration();
         this.client = new EasyFamilyHttpClient(config);
     }
@@ -131,7 +132,7 @@ public class EasyFamilyHandler extends BaseThingHandler {
                 return;
             }
         }
-        if (this.initializationFailureCounter == 3) {
+        if (this.initializationFailureCounter >= 3) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.HANDLER_INITIALIZING_ERROR, "@text/initFailed");
             dispose();
             return;
@@ -200,6 +201,7 @@ public class EasyFamilyHandler extends BaseThingHandler {
 
             if (login != null) {
                 // Extract device properties
+                parseURLEncodedData(login);
                 Map<String, String> propertyMap = device.setDeviceProperties(login.sysinfo);
                 updateProperties(propertyMap);
                 // Extract device info
@@ -209,7 +211,7 @@ public class EasyFamilyHandler extends BaseThingHandler {
                 }
 
                 // Create a HashMap to cache channel states
-                List<Channel> wrongIDList = device.createMap();
+                List<Channel> wrongIDList = device.createMap(this.thing);
                 for (Channel channel : wrongIDList) {
                     device.statusCounter++;
                     channelUtility.parseChannelInfo(channel.getUID().getId());
@@ -255,6 +257,15 @@ public class EasyFamilyHandler extends BaseThingHandler {
             logger.debug("Something unexpected happened {}", e.toString());
         }
         return true;
+    }
+
+    private void parseURLEncodedData(LoginResponse login) {
+        String parsedData = URIUtil.decodePath(login.sysinfo.devName);
+        if (parsedData != null)
+            login.sysinfo.devName = parsedData;
+        parsedData = URIUtil.decodePath(login.sysinfo.ethernetDomain);
+        if (parsedData != null)
+            login.sysinfo.ethernetDomain = parsedData;
     }
 
     @Override
@@ -341,10 +352,11 @@ public class EasyFamilyHandler extends BaseThingHandler {
                 closeClient();
             }
         } else if (command instanceof RefreshType) {
-            List<Channel> wrongIDs = this.device.createMap();
+            List<Channel> wrongIDs = this.device.createMap(this.thing);
             if (!wrongIDs.isEmpty()) {
                 logger.debug("There are some wrong IDs!");
             }
+            thingUpdated(thing);
         }
     }
 
