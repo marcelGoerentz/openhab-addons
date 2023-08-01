@@ -54,7 +54,6 @@ import org.osgi.framework.FrameworkUtil;
 @NonNullByDefault
 public class EasyDevice {
 
-    private final Thing thing;
     protected final BundleContext bundleContext = FrameworkUtil.getBundle(EasyFamilyHandler.class).getBundleContext();
     protected final Querries querries = new Querries();
 
@@ -81,8 +80,7 @@ public class EasyDevice {
      * @param i18nProvider
      * @param thing
      */
-    public EasyDevice(Thing thing, TranslationProvider i18nProvider, LocaleProvider localeProvider) {
-        this.thing = thing;
+    public EasyDevice(TranslationProvider i18nProvider, LocaleProvider localeProvider) {
         this.i18nProvider = i18nProvider;
         this.localeProvider = localeProvider;
     }
@@ -91,7 +89,7 @@ public class EasyDevice {
      * This method creates a Hash Map where the requested Operands where saved
      * and determines the querry range for markers and NETmarkers
      */
-    public List<Channel> createMap() {
+    public List<Channel> createMap(Thing thing) {
         List<Channel> wrongIDList = new ArrayList<Channel>();
 
         EasyFamilyOperandFactory operandFactory = new EasyFamilyOperandFactory();
@@ -175,7 +173,7 @@ public class EasyDevice {
 
     public void setMarker(short v, boolean net) {
         if (net) {
-            querries.seNetMarkerRanger(v);
+            querries.setNetMarkerRanger(v);
         } else {
             querries.setMarkerRanger(v);
         }
@@ -299,7 +297,7 @@ public class EasyDevice {
             }
         }
 
-        public void seNetMarkerRanger(short value) {
+        public void setNetMarkerRanger(short value) {
             if (value > queryNetMarkerRangeUpper) {
                 queryNetMarkerRangeUpper = value;
             } else if (value == 0) {
