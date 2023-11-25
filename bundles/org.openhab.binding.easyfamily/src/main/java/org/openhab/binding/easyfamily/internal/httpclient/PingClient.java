@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2022 Contributors to the openHAB project
+ * Copyright (c) 2010-2023 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -13,41 +13,54 @@
 package org.openhab.binding.easyfamily.internal.httpclient;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * The {@link PingClient} class contains fields mapping thing
- * configuration parameters.
+ * The {@link PingClient} class will ping a client.
  *
  * @author Marcel Goerentz - Initial contribution
  */
 @NonNullByDefault
 public class PingClient {
-    public static boolean pingClient(String ip) {
+
+    private final Logger logger = LoggerFactory.getLogger(PingClient.class);
+
+    public boolean pingClient(String ip) {
         try {
-            Process p = Runtime.getRuntime().exec("ping " + ip);
-            BufferedReader inputStreamReader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            String s = "";
-            StringBuilder output = new StringBuilder();
-            for (int i = 0; i < 4; i++) {
-                if ((s = inputStreamReader.readLine()) != null) {
-                    output.append(s);
-                } else {
-                    break;
-                }
-            }
-            p.destroy();
-            s = output.toString();
-            if (s.contains("ttl") || s.contains("TTL")) {
-                return true;
-            } else {
-                return false;
-            }
+            List<String> commands = new ArrayList<>();
+            commands.add("ping");
+            commands.add("-w");
+            commands.add("3");
+            commands.add(ip);
+            String s = runCommand(commands);
+            return (s.contains("ttl") || s.contains("TTL"));
         } catch (Exception e) {
-            /* ignore */
+            logger.debug("This exception occurred when trying to ping the client: {}", e.getMessage());
         }
         return false;
+    }
+
+    private static String runCommand(List<String> commands) throws IOException {
+        Process p = new ProcessBuilder(commands).start();
+        BufferedReader inputStreamReader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        String s;
+        StringBuilder output = new StringBuilder();
+        for (int i = 0; i < 4; i++) {
+            if ((s = inputStreamReader.readLine()) != null) {
+                output.append(s);
+            } else {
+                break;
+            }
+        }
+        p.destroy();
+        s = output.toString();
+        return s;
     }
 }

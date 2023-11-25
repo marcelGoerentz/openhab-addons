@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2022 Contributors to the openHAB project
+ * Copyright (c) 2010-2023 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -26,23 +26,31 @@ public class EasyFamilyScanResponse {
     public String deviceMask = "";
     public String deviceGw = "";
     public String deviceDNS = "";
-    // public int deviceType;
-    // public int deviceDevState;
+    /*
+     * public int deviceType;
+     * / public int deviceDevState;
+     */
     public String deviceMAC = "";
-    // public int deviceNetID;
-    // public int deviceNetIDUse;
-    // public int deviceNetGroup;
-    // public int deviceBusDelay;
-    // public int deviceIPMode;
-    // public boolean deviceConfigProtection;
-    // public boolean deviceEncryptionNET;
-    // public boolean deviceEncryptionTCP;
+    /*
+     * public int deviceNetID;
+     * / public int deviceNetIDUse;
+     * / public int deviceNetGroup;
+     * / public int deviceBusDelay;
+     * / public int deviceIPMode;
+     * / public boolean deviceConfigProtection;
+     * / public boolean deviceEncryptionNET;
+     * / public boolean deviceEncryptionTCP;
+     */
     public boolean deviceHTTPActive;
-    // public boolean deviceRemoteRun;
-    // public boolean deviceUDPRDEnable;
+    /*
+     * public boolean deviceRemoteRun;
+     * / public boolean deviceUDPRDEnable;
+     */
     public boolean deviceSSLEnable;
-    // public int deviceEasyComPort;
-    // public int deviceTimeSync;
+    /*
+     * public int deviceEasyComPort;
+     * / public int deviceTimeSync;
+     */
     public int deviceHTTPPort;
     public String deviceName = "";
     public String deviceDomainName = "";
@@ -54,7 +62,6 @@ public class EasyFamilyScanResponse {
      * This method parse the responded udp packet
      * 
      * @param b byte array of the response
-     * @throws UnknownHostException
      */
     public EasyFamilyScanResponse(byte[] b) {
         this.rawData = b;
@@ -84,18 +91,19 @@ public class EasyFamilyScanResponse {
      * 
      */
     private void setBitValues() {
-        // this.deviceConfigProtection = ((b[42] >> 2) & 0x01) == 1;
-        // this.deviceEncryptionNET = ((b[42] >> 3) & 0x01) == 1;
+        /*
+         * this.deviceConfigProtection = ((b[42] >> 2) & 0x01) == 1;
+         * / this.deviceEncryptionNET = ((b[42] >> 3) & 0x01) == 1;
+         */
         this.deviceHTTPActive = ((rawData[42] >> 4) & 0x01) == 1;
-        // this.deviceRemoteRun = ((b[42] >> 5) & 0x01) == 1;
-        // this.deviceEncryptionTCP = ((b[42] >> 6) & 0x01) == 1;
-        // this.deviceUDPRDEnable = ((b[42] >> 7) & 0x01) == 1;
+        /*
+         * this.deviceRemoteRun = ((b[42] >> 5) & 0x01) == 1;
+         * / this.deviceEncryptionTCP = ((b[42] >> 6) & 0x01) == 1;
+         * / this.deviceUDPRDEnable = ((b[42] >> 7) & 0x01) == 1;
+         */
         this.deviceSSLEnable = (rawData[43] & 0x01) == 1;
     }
 
-    /**
-     * 
-     */
     /*
      * private void setByteValues() {
      * // this.deviceDevState = b[20];
@@ -188,7 +196,7 @@ public class EasyFamilyScanResponse {
 
     /**
      * 
-     * @param b Byte array that will be transformed into a IP address
+     * @param b Byte array that will be transformed into an IP address
      * @return IP address as a string
      */
     private String buildAddressString(byte[] b) {

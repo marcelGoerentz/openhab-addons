@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2022 Contributors to the openHAB project
+ * Copyright (c) 2010-2023 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -18,27 +18,32 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.openhab.core.thing.ChannelUID;
 
 /**
- * The {@link EasyFamilyFunctionBlocks} is an abstract class for representing the available function blocks on the
+ * The {@link EasyFamilyMarkerBytes} is an abstract class for representing the available Marker Byte operands on a
  * device
  *
  * @author Marcel Goerentz - Initial contribution
  */
 @NonNullByDefault
-public class EasyFamilyMarkerBytes extends EasyFamilyWriteableOperand {
+public class EasyFamilyMarkerBytes extends EasyFamilyMarkerArithmeticOperand {
 
     EasyFamilyMarkerBytes(int number, ChannelUID uid) {
-        super(CHANNEL_MARKER_BYTES, number, uid);
+        super(CHANNEL_ID_MARKER_BYTES, number, uid, 2);
         setPath();
         setQuery();
     }
 
     @Override
-    protected String setPath() {
+    public String setPath() {
         return "/api/set/op";
     }
 
     @Override
-    protected String setQuery() {
+    public String setQuery() {
         return "?op=MB&index=" + number + "&val=";
+    }
+
+    @Override
+    public String getAcceptedItemType() {
+        return ITEM_TYPE_NUMBER;
     }
 }

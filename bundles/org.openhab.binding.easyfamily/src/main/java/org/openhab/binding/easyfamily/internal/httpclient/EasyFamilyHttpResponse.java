@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2022 Contributors to the openHAB project
+ * Copyright (c) 2010-2023 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -23,8 +23,8 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 @NonNullByDefault
 public class EasyFamilyHttpResponse {
 
-    public String content = "";
-    public int httpCode = 0;
+    public final String content;
+    public final int httpCode;
 
     public EasyFamilyHttpResponse() {
         content = "";

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2022 Contributors to the openHAB project
+ * Copyright (c) 2010-2023 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -12,29 +12,14 @@
  */
 package org.openhab.binding.easyfamily.internal;
 
-import static org.openhab.binding.easyfamily.internal.EasyFamilyBindingConstants.CHANNEL_ANALOG_INPUTS;
-import static org.openhab.binding.easyfamily.internal.EasyFamilyBindingConstants.CHANNEL_ANALOG_OUTPUTS;
-import static org.openhab.binding.easyfamily.internal.EasyFamilyBindingConstants.CHANNEL_INPUTS;
-import static org.openhab.binding.easyfamily.internal.EasyFamilyBindingConstants.CHANNEL_IOX;
-import static org.openhab.binding.easyfamily.internal.EasyFamilyBindingConstants.CHANNEL_MARKERS;
-import static org.openhab.binding.easyfamily.internal.EasyFamilyBindingConstants.CHANNEL_MARKER_BYTES;
-import static org.openhab.binding.easyfamily.internal.EasyFamilyBindingConstants.CHANNEL_MARKER_DWORDS;
-import static org.openhab.binding.easyfamily.internal.EasyFamilyBindingConstants.CHANNEL_MARKER_WORDS;
-import static org.openhab.binding.easyfamily.internal.EasyFamilyBindingConstants.CHANNEL_NET_MARKERS;
-import static org.openhab.binding.easyfamily.internal.EasyFamilyBindingConstants.CHANNEL_NET_MARKER_BYTES;
-import static org.openhab.binding.easyfamily.internal.EasyFamilyBindingConstants.CHANNEL_NET_MARKER_DWORDS;
-import static org.openhab.binding.easyfamily.internal.EasyFamilyBindingConstants.CHANNEL_NET_MARKER_WORDS;
-import static org.openhab.binding.easyfamily.internal.EasyFamilyBindingConstants.CHANNEL_OUTPUTS;
-import static org.openhab.binding.easyfamily.internal.EasyFamilyBindingConstants.CHANNEL_STATE;
+import static org.openhab.binding.easyfamily.internal.EasyFamilyBindingConstants.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.lang.reflect.Field;
+import java.util.*;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.openhab.binding.easyfamily.internal.json.login.Sysinfo;
+import org.openhab.binding.easyfamily.internal.dto.json.login.Sysinfo;
 import org.openhab.binding.easyfamily.internal.operands.EasyFamilyNullOperand;
 import org.openhab.binding.easyfamily.internal.operands.EasyFamilyOperand;
 import org.openhab.binding.easyfamily.internal.operands.EasyFamilyOperandFactory;
@@ -44,6 +29,8 @@ import org.openhab.core.thing.Channel;
 import org.openhab.core.thing.Thing;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The {@link EasyDevice} is responsible sett,
@@ -54,12 +41,14 @@ import org.osgi.framework.FrameworkUtil;
 @NonNullByDefault
 public class EasyDevice {
 
+    private final Logger logger = LoggerFactory.getLogger(EasyDevice.class);
+
     protected final BundleContext bundleContext = FrameworkUtil.getBundle(EasyFamilyHandler.class).getBundleContext();
-    protected final Querries querries = new Querries();
+    public final Queries queries = new Queries();
 
     private final TranslationProvider i18nProvider;
     private final LocaleProvider localeProvider;
-
+    public int webServerPort;
     protected Boolean isInNETGroup = false;
     protected Boolean enableIORead = false;
     protected Boolean accessMode = false;
@@ -68,17 +57,13 @@ public class EasyDevice {
     protected short deviceNetMarkerRangeLower = 0;
     protected short deviceNetMarkerRangeUpper = 0;
 
-    protected Boolean firstValues = true;
-
     protected int statusCounter = 0;
     protected float statusRef = 0;
 
-    protected HashMap<String, EasyFamilyOperand> operands = new HashMap<>();
+    protected final HashMap<String, @Nullable EasyFamilyOperand> operands = new HashMap<>();
 
     /**
      *
-     * @param i18nProvider
-     * @param thing
      */
     public EasyDevice(TranslationProvider i18nProvider, LocaleProvider localeProvider) {
         this.i18nProvider = i18nProvider;
@@ -87,122 +72,81 @@ public class EasyDevice {
 
     /**
      * This method creates a Hash Map where the requested Operands where saved
-     * and determines the querry range for markers and NETmarkers
+     * and determines the query range for markers and NET-Markers
      */
     public List<Channel> createMap(Thing thing) {
-        List<Channel> wrongIDList = new ArrayList<Channel>();
-
-        EasyFamilyOperandFactory operandFactory = new EasyFamilyOperandFactory();
+        List<Channel> wrongIDList = new ArrayList<>();
         // get a list of all the channels bound to the thing
         List<Channel> channelList = thing.getChannels();
         // iterate through the list and add them to them map
-        for (Channel channel : channelList) {
+        addOperandsFromChannelList(channelList, wrongIDList);
+        setQueries();
+        return wrongIDList;
+    }
+
+    public void addOperandsFromChannelList(List<Channel> channels) {
+        EasyFamilyOperandFactory operandFactory = new EasyFamilyOperandFactory();
+        for (Channel channel : channels) {
             EasyFamilyOperand operand = operandFactory.getOperand(channel.getUID());
-            if (!(operand instanceof EasyFamilyNullOperand)) {
+            if (!(operand instanceof EasyFamilyNullOperand) && !operands.containsValue(operand)) {
                 operands.put(operand.getChannelID(), operand);
+            }
+        }
+    }
+
+    public void addOperandsFromChannelList(List<Channel> channels, List<Channel> wrongIDList) {
+        var operandFactory = new EasyFamilyOperandFactory();
+        for (Channel channel : channels) {
+            var operand = operandFactory.getOperand(channel.getUID());
+            if (!(operand instanceof EasyFamilyNullOperand)) {
+                if (!operands.containsValue(operand)) {
+                    operands.put(operand.getChannelID(), operand);
+                } else {
+                    wrongIDList.add(channel);
+                }
             } else {
                 wrongIDList.add(channel);
             }
         }
-        setQuerries();
-        return wrongIDList;
     }
 
     /**
      * 
      */
-    private void setQuerries() {
-        short v = 0;
-        boolean netMarker;
-        boolean state;
+    public void setQueries() {
         for (EasyFamilyOperand operand : operands.values()) {
-            netMarker = false;
-            state = false;
-            switch (operand.type) {
-                case CHANNEL_STATE:
-                case CHANNEL_IOX:
-                    state = true;
-                    break;
-                case CHANNEL_ANALOG_INPUTS:
-                case CHANNEL_ANALOG_OUTPUTS:
-                case CHANNEL_INPUTS:
-                case CHANNEL_OUTPUTS:
-                    state = true;
-                    this.querries.queryForIOs = true;
-                    break;
-                case CHANNEL_MARKERS:
-                    this.querries.queryForMarkers = true;
-                    v = (short) (operand.number / 16);
-                    break;
-                case CHANNEL_MARKER_BYTES:
-                    this.querries.queryForMarkers = true;
-                    v = (short) (operand.number / 2);
-                    break;
-                case CHANNEL_MARKER_WORDS:
-                    this.querries.queryForMarkers = true;
-                    v = (short) operand.number;
-                    break;
-                case CHANNEL_MARKER_DWORDS:
-                    v = (short) (operand.number * 2);
-                    break;
-                case CHANNEL_NET_MARKERS:
-                    this.querries.queryForNetMarkers = true;
-                    netMarker = true;
-                    v = (short) (operand.number / 16);
-                    break;
-                case CHANNEL_NET_MARKER_BYTES:
-                    this.querries.queryForNetMarkers = true;
-                    netMarker = true;
-                    v = (short) (operand.number / 2);
-                    break;
-                case CHANNEL_NET_MARKER_WORDS:
-                    this.querries.queryForNetMarkers = true;
-                    netMarker = true;
-                    v = (short) (operand.number);
-                    break;
-                case CHANNEL_NET_MARKER_DWORDS:
-                    this.querries.queryForNetMarkers = true;
-                    netMarker = true;
-                    v = (short) (operand.number * 2);
+            if (operand != null) {
+                operand.setQueries(this);
             }
-            if (!state) {
-                setMarker(v, netMarker);
-            }
-        }
-    }
-
-    public void setMarker(short v, boolean net) {
-        if (net) {
-            querries.setNetMarkerRanger(v);
-        } else {
-            querries.setMarkerRanger(v);
         }
     }
 
     /**
      * Method to set device properties
-     * 
-     * @param jsonObject JSON from {@link #parseResponse parseResponse} method.
      */
     public Map<String, String> setDeviceProperties(Sysinfo sysinfo) {
         // Create HashMap for the properties
         Map<String, String> propertyMap = new HashMap<>();
         // Load translated strings
         PropertyStrings locals = new PropertyStrings(this.i18nProvider, this.bundleContext);
-        propertyMap.put(locals.ip, sysinfo.ipSet.actIP);
-        propertyMap.put(locals.mac, sysinfo.mac.toUpperCase());
+        propertyMap.put(locals.ipAddressProp, sysinfo.ipSet.actIP);
+        propertyMap.put(locals.macAddress, sysinfo.mac.toUpperCase().replace("-", ":"));
+        propertyMap.put(locals.netID, Integer.toString(sysinfo.netID));
         propertyMap.put(locals.vendor, "Eaton");
-        propertyMap.put(locals.fw, sysinfo.vers);
+        propertyMap.put(locals.firmware, sysinfo.vers);
+        propertyMap.put(locals.build, sysinfo.build);
+        propertyMap.put(locals.btlVersion, sysinfo.btlVersion);
         propertyMap.put(locals.type, sysinfo.type);
         propertyMap.put(locals.serialNumber, sysinfo.serialNumber);
-        propertyMap.put(locals.device, sysinfo.devName);
-        if (!"".equals(sysinfo.ethernetDomain)) {
-            propertyMap.put(locals.domain, sysinfo.ethernetDomain);
+        propertyMap.put(locals.dateOfManufacture, sysinfo.dateOfManufacture);
+        propertyMap.put(locals.deviceName, sysinfo.devName);
+        if (!sysinfo.ethernetDomain.isEmpty()) {
+            propertyMap.put(locals.domainName, sysinfo.ethernetDomain);
         }
-        if (!"".equals(sysinfo.progname)) {
-            propertyMap.put(locals.program, sysinfo.progname);
+        if (!sysinfo.progname.isEmpty()) {
+            propertyMap.put(locals.programName, sysinfo.progname);
         }
-        return (propertyMap);
+        return propertyMap;
     }
 
     /**
@@ -210,71 +154,42 @@ public class EasyDevice {
      */
     public class PropertyStrings {
 
-        String mac = "";
-        String fw = "";
-        String type = "";
-        String serialNumber = "";
-        String ip = "";
-        String device = "";
-        String domain = "";
-        String program = "";
-        String vendor = "";
+        public String macAddress = "";
+        public String firmware = "";
+        public String build = "";
+        public String btlVersion = "";
+        public String type = "";
+        public String serialNumber = "";
+        public String dateOfManufacture = "";
+        public String ipAddressProp = "";
+        public String deviceName = "";
+        public String domainName = "";
+        public String programName = "";
+        public String vendor = "";
+        public String netID = "";
 
         /**
          * Get the localized property strings
          */
         public PropertyStrings(TranslationProvider i18nProvider, BundleContext bundleContext) {
-            @Nullable
-            String tmp = i18nProvider.getText(bundleContext.getBundle(), "macAddress", "MAC address",
-                    localeProvider.getLocale());
-            if (tmp != null) {
-                this.mac = tmp;
-            }
-            tmp = i18nProvider.getText(bundleContext.getBundle(), "firmware", "Firmware version",
-                    localeProvider.getLocale());
-            if (tmp != null) {
-                this.fw = tmp;
-            }
-            tmp = i18nProvider.getText(bundleContext.getBundle(), "type", "device type", localeProvider.getLocale());
-            if (tmp != null) {
-                this.type = tmp;
-            }
-            tmp = i18nProvider.getText(bundleContext.getBundle(), "serialnumber", "Serialnumber",
-                    localeProvider.getLocale());
-            if (tmp != null) {
-                this.serialNumber = tmp;
-            }
-            tmp = i18nProvider.getText(bundleContext.getBundle(), "ipAddressProp", "IP address",
-                    localeProvider.getLocale());
-            if (tmp != null) {
-                this.ip = tmp;
-            }
-            tmp = i18nProvider.getText(bundleContext.getBundle(), "deviceName", "Device name",
-                    localeProvider.getLocale());
-            if (tmp != null) {
-                this.device = tmp;
-            }
-            tmp = i18nProvider.getText(bundleContext.getBundle(), "domainName", "Domain name",
-                    localeProvider.getLocale());
-            if (tmp != null) {
-                this.domain = tmp;
-            }
-            tmp = i18nProvider.getText(bundleContext.getBundle(), "programName", "Program name",
-                    localeProvider.getLocale());
-            if (tmp != null) {
-                this.program = tmp;
-            }
-            tmp = i18nProvider.getText(bundleContext.getBundle(), "vendor", "Vendor", localeProvider.getLocale());
-            if (tmp != null) {
-                this.vendor = tmp;
+            Field[] fields = PropertyStrings.class.getFields();
+            for (Field field : fields) {
+                field.setAccessible(true);
+                String fieldName = field.getName();
+                String tmp = i18nProvider.getText(bundleContext.getBundle(), fieldName, PROPERTIES.get(fieldName),
+                        localeProvider.getLocale());
+                if (tmp != null) {
+                    try {
+                        field.set(this, tmp);
+                    } catch (IllegalAccessException e) {
+                        logger.debug("This went wrong when setting the properties: {}", e.getMessage());
+                    }
+                }
             }
         }
     }
 
-    public class Querries {
-
-        // public int[] queryMarkerRange = { 512, 0 };
-        // public int[] queryNetMarkerRange = { 32, 0 };
+    public static class Queries {
         public Boolean queryForIOs = false;
         public Boolean queryForMarkers = false;
         public Boolean queryForNetMarkers = false;
@@ -287,8 +202,6 @@ public class EasyDevice {
         public void setMarkerRanger(short value) {
             if (value > queryMarkerRangeUpper) {
                 queryMarkerRangeUpper = value;
-            } else if (value == 0) {
-                queryMarkerRangeUpper = 1;
             }
             if (value == 0) {
                 queryMarkerRangeLower = 1;
@@ -300,8 +213,6 @@ public class EasyDevice {
         public void setNetMarkerRanger(short value) {
             if (value > queryNetMarkerRangeUpper) {
                 queryNetMarkerRangeUpper = value;
-            } else if (value == 0) {
-                queryNetMarkerRangeUpper = 1;
             }
             if (value == 0) {
                 queryNetMarkerRangeLower = 1;

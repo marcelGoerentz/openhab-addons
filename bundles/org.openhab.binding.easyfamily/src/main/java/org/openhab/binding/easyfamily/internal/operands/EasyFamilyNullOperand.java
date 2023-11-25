@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2022 Contributors to the openHAB project
+ * Copyright (c) 2010-2023 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -13,6 +13,7 @@
 package org.openhab.binding.easyfamily.internal.operands;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.openhab.binding.easyfamily.internal.EasyDevice;
 import org.openhab.core.thing.ChannelUID;
 
 /**
@@ -23,7 +24,22 @@ import org.openhab.core.thing.ChannelUID;
 @NonNullByDefault
 public class EasyFamilyNullOperand extends EasyFamilyOperand {
 
-    public EasyFamilyNullOperand(String type, Integer number, ChannelUID uid) {
-        super(type, number, uid);
+    public EasyFamilyNullOperand(String channelUID, Integer number, ChannelUID uid) {
+        super(channelUID, number, uid);
+    }
+
+    @Override
+    public String getAcceptedItemType() {
+        return "";
+    }
+
+    @Override
+    public int getMaximumInstance() {
+        return 0;
+    }
+
+    @Override
+    public void setQueries(EasyDevice device) {
+        return;
     }
 }

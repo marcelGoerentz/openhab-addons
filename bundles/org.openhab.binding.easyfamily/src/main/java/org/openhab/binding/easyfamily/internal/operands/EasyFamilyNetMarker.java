@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2022 Contributors to the openHAB project
+ * Copyright (c) 2010-2023 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -18,7 +18,7 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.openhab.core.thing.ChannelUID;
 
 /**
- * The {@link EasyFamilyFunctionBlocks} is an abstract class for representing the available function blocks on the
+ * The {@link EasyFamilyNetMarker} is an abstract class for representing the available function blocks on the
  * device
  *
  * @author Marcel Goerentz - Initial contribution
@@ -27,16 +27,26 @@ import org.openhab.core.thing.ChannelUID;
 public class EasyFamilyNetMarker extends EasyFamilyNetOperand {
 
     EasyFamilyNetMarker(int number, int netID, ChannelUID uid) {
-        super(CHANNEL_MARKERS, number, netID, uid);
+        super(CHANNEL_ID_NET_MARKERS, number, netID, uid, 16);
     }
 
     @Override
-    protected String setPath() {
+    public String setPath() {
         return "/api/set/op";
     }
 
     @Override
-    protected String setQuery() {
+    public String setQuery() {
         return "?op=N&index=" + number + "&netid=" + (netID - 1) + "&val=";
+    }
+
+    @Override
+    public String getAcceptedItemType() {
+        return "Switch";
+    }
+
+    @Override
+    public int getMaximumInstance() {
+        return MAX_MARKER_INSTANCE;
     }
 }

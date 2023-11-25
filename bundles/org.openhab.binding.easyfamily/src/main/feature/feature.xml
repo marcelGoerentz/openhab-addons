@@ -4,7 +4,7 @@
 
 	<feature name="openhab-binding-easyfamily" description="EasyFamily Binding" version="${project.version}">
 		<feature>openhab-runtime-base</feature>
-		<bundle dependency="true">mvn:org.jsoup/jsoup/1.15.3</bundle>
+		<bundle dependency="true">mvn:org.jsoup/jsoup/1.16.2</bundle>
 		<bundle start-level="80">mvn:org.openhab.addons.bundles/org.openhab.binding.easyfamily/${project.version}</bundle>
 	</feature>
 </features>

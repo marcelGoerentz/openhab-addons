@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2022 Contributors to the openHAB project
+ * Copyright (c) 2010-2023 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 @NonNullByDefault
 public class EasyFamilyChannelUtility {
 
-    private final Logger logger = LoggerFactory.getLogger(EasyFamilyHandler.class);
+    private final Logger logger = LoggerFactory.getLogger(EasyFamilyChannelUtility.class);
 
     public String channelType = "";
     public int channelNumber = 0;
@@ -48,10 +48,10 @@ public class EasyFamilyChannelUtility {
             // check if there is a netID
             // if there is a netID then retrieve it
             String tmp = channelID.replaceAll("[A-Z][0-9]*", "");
-            if (tmp.equals("")) {
+            if (tmp.isEmpty()) {
                 tmp = "0";
             }
-            logger.debug("From: " + channelID + " extracted " + tmp);
+            logger.debug("From: {} extracted: {}", channelID, tmp);
             this.netID = Integer.parseInt(tmp);
             // get all digits from the String
             tmp = channelID.replaceAll("[^0-9?!.]", "");

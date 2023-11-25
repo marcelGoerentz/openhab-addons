@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2022 Contributors to the openHAB project
+ * Copyright (c) 2010-2023 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -50,24 +50,28 @@ public class EasyFamilyHttpClient {
     private final HttpClient client;
     private final EasyFamilyConfiguration config;
     private final String uri;
-    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
-    private @Nullable ScheduledFuture<?> timer;
+    private final @Nullable ScheduledFuture<?> timer;
     private boolean readyToSend = true;
 
     public boolean isClosed = false;
 
     public EasyFamilyHttpClient(EasyFamilyConfiguration config) {
         this.config = config;
+        StringBuilder uriBuilder = new StringBuilder().append("http");
         if (config.encryption) {
             this.client = setUpHttpsClient();
-            uri = "https://" + config.ipAddress;
+            uriBuilder.append("s://");
         } else {
             this.client = new HttpClient();
-            uri = "http://" + config.ipAddress;
         }
+        uriBuilder.append(config.ipAddress);
+        if ((config.encryption && config.port != 443) || (!config.encryption && config.port != 80)) {
+            uriBuilder.append(":").append(config.port);
+        }
+        uri = uriBuilder.toString();
         try {
-            startClient(this.client);
+            startClient();
         } catch (Exception e) {
             logger.error("Couldn't start Client! Exception: {}", e.toString());
             isClosed = true;
@@ -75,9 +79,8 @@ public class EasyFamilyHttpClient {
             return;
         }
 
-        Runnable runnable = () -> {
-            readyToSend = true;
-        };
+        Runnable runnable = () -> readyToSend = true;
+        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
         timer = scheduler.scheduleWithFixedDelay(runnable, 50, 50, TimeUnit.MILLISECONDS);
     }
 
@@ -86,18 +89,21 @@ public class EasyFamilyHttpClient {
         sslContextFactory.setTrustAll(true);
         sslContextFactory.setEndpointIdentificationAlgorithm("HTTPS");
         sslContextFactory.setExcludeProtocols("SSL", "SSLv2", "SSLv2Hello", "SSLv3", "TLSv1", "TLSv1.1");
-        HttpClient client = new HttpClient(sslContextFactory);
-        return client;
+        return new HttpClient(sslContextFactory);
     }
 
-    private void startClient(HttpClient client) throws Exception {
+    public synchronized void startClient() throws Exception {
         client.setFollowRedirects(false);
         client.setIdleTimeout(config.connectionTimeOut);
         client.setName("EasyFamilyHttpClient");
         client.start();
     }
 
-    public EasyFamilyHttpResponse sendMsg(String path)
+    public synchronized void stopClient() throws Exception {
+        client.stop();
+    }
+
+    public synchronized EasyFamilyHttpResponse sendMsg(String path)
             throws InterruptedException, TimeoutException, ExecutionException, URISyntaxException, DataFormatException {
         if (!readyToSend) {
             Thread.sleep(50);
@@ -108,7 +114,9 @@ public class EasyFamilyHttpClient {
         if (path.contains("xml")) {
             return new EasyFamilyHttpResponse(decompressResponse(response.getContent()), response.getStatus());
         } else {
-            return new EasyFamilyHttpResponse(response.getContentAsString(), response.getStatus());
+            String tmp = response.getContentAsString();
+            String content = tmp != null ? tmp : "";
+            return new EasyFamilyHttpResponse(content, response.getStatus());
         }
     }
 
@@ -124,26 +132,27 @@ public class EasyFamilyHttpClient {
         return request;
     }
 
-    private String decompressResponse(byte[] compressed) throws DataFormatException {
+    private String decompressResponse(byte @Nullable [] compressed) throws DataFormatException {
         String content = "";
-        Inflater decomp = new Inflater(true);
-        decomp.setInput(compressed);
-        int decompressLength = Math.round(compressed.length * 4);
-        byte[] decompressed = new byte[decompressLength];
-        int resultLength = decomp.inflate(decompressed);
-        content = Jsoup.parse(new String(decompressed, 0, resultLength, StandardCharsets.UTF_8)).body().toString()
-                .replace("<body>", "").replace("</body>", "").strip();
-        decomp.end();
-        return content.equals(null) ? "" : content;
+        if (compressed != null) {
+            Inflater decomp = new Inflater(true);
+            decomp.setInput(compressed);
+            int decompressLength = compressed.length * 7;
+            byte[] decompressed = new byte[decompressLength];
+            int resultLength = decomp.inflate(decompressed);
+            content = Jsoup.parse(new String(decompressed, 0, resultLength, StandardCharsets.UTF_8)).body().toString()
+                    .replace("<body>", "").replace("</body>", "").strip();
+            decomp.end();
+        }
+        return content;
     }
 
     /**
-     * 
-     * @return
+     *
      */
-    public boolean isConnected() {
+    public synchronized boolean isConnected() {
         String state = this.client.getState();
-        return "STARTED".equals(state) ? true : false;
+        return "STARTED".equals(state);
     }
 
     /**
@@ -152,47 +161,13 @@ public class EasyFamilyHttpClient {
     public synchronized void close() {
         this.isClosed = true;
         try {
-            this.client.stop();
+            stopClient();
             ScheduledFuture<?> timer = this.timer;
             if (timer != null) {
                 timer.cancel(true);
-                timer = null;
             }
         } catch (Exception e) {
             logger.error("Couldn't close HttpClient! Exception: {}", e.toString());
         }
     }
-
-    @Override
-    public void finalize() {
-        if (!this.client.isStopped() || !this.client.isStopping()) {
-            logger.error("Close has not been called");
-            try {
-                this.client.stop();
-                ScheduledFuture<?> timer = this.timer;
-                if (timer != null) {
-                    timer.cancel(true);
-                    timer = null;
-                }
-            } catch (Exception e) {
-                logger.debug("Couldn't stop client in finalze: {}", e.toString());
-            }
-        }
-    }
-
-    /*
-     * public KeyStore certificateTest() throws FileNotFoundException, CertificateException, KeyStoreException,
-     * NoSuchAlgorithmException, IOException {
-     * 
-     * FileInputStream fis = new FileInputStream("easyE4.cert"); // path is /var/lib/openhab/ for linux
-     * X509Certificate ca = (X509Certificate) CertificateFactory.getInstance("X.509")
-     * .generateCertificate(new BufferedInputStream(fis));
-     * 
-     * KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
-     * ks.load(null, null);
-     * ks.setCertificateEntry(Integer.toString(1), ca);
-     * 
-     * return ks;
-     * }
-     */
 }

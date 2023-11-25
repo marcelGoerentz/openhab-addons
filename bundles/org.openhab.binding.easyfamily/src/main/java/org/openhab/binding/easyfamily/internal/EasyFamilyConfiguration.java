@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2022 Contributors to the openHAB project
+ * Copyright (c) 2010-2023 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -13,8 +13,6 @@
 package org.openhab.binding.easyfamily.internal;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
-
-import com.google.gson.JsonObject;
 
 /**
  * The {@link EasyFamilyConfiguration} class contains fields mapping thing
@@ -34,23 +32,7 @@ public class EasyFamilyConfiguration {
 
     // Authentification fields
     public String apiKey = "";
-    public String user = "";
-    public String password = "";
-    public String credentials = "";
 
     // Commentary list field
     public Boolean loadCommentaryList = false;
-
-    public JsonObject getAsJsonObject() {
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("IP", this.ipAddress);
-        jsonObject.addProperty("PORT", this.port);
-        jsonObject.addProperty("ENCRYPTION", this.encryption);
-        jsonObject.addProperty("APIKEY", this.apiKey);
-        jsonObject.addProperty("USER", this.user);
-        jsonObject.addProperty("PASSWORD", this.password);
-        jsonObject.addProperty("TIMEOUT", this.connectionTimeOut);
-        jsonObject.addProperty("POLLING", this.pollingInterval);
-        return jsonObject;
-    }
 }

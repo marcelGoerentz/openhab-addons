@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2022 Contributors to the openHAB project
+ * Copyright (c) 2010-2023 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -18,16 +18,25 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.openhab.core.thing.ChannelUID;
 
 /**
- * The {@link EasyFamilyFunctionBlocks} is an abstract class for representing the available function blocks on the
+ * The {@link EasyFamilyInput} is a class for representing the available digital input operands on a
  * device
  *
  * @author Marcel Goerentz - Initial contribution
  */
 @NonNullByDefault
-public class EasyFamilyInput extends EasyFamilyReadOnlyOperand {
+public class EasyFamilyInput extends EasyFamilyDigitalIOOperand {
 
     EasyFamilyInput(int number, ChannelUID uid) {
-        super(CHANNEL_INPUTS, number, uid);
+        super(CHANNEL_ID_INPUTS, number, uid);
         this.value = 0;
+    }
+
+    public String getAcceptedItemType() {
+        return ITEM_TYPE_SWITCH;
+    }
+
+    @Override
+    public int getMaximumInstance() {
+        return MAX_DIGITAL_IO_INSTANCE;
     }
 }

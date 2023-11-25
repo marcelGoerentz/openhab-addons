@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2022 Contributors to the openHAB project
+ * Copyright (c) 2010-2023 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -13,10 +13,11 @@
 package org.openhab.binding.easyfamily.internal.operands;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.openhab.binding.easyfamily.internal.EasyDevice;
 import org.openhab.core.thing.ChannelUID;
 
 /**
- * The {@link EasyFamilyFunctionBlocks} is an abstract class for representing the available function blocks on the
+ * The {@link EasyFamilyNetOperand} is an abstract class for representing the available NET operands on a
  * device
  *
  * @author Marcel Goerentz - Initial contribution
@@ -25,13 +26,21 @@ import org.openhab.core.thing.ChannelUID;
 public abstract class EasyFamilyNetOperand extends EasyFamilyWriteableOperand {
 
     public final int netID;
+    public final int divisor;
 
-    EasyFamilyNetOperand(String type, int number, int netID, ChannelUID uid) {
-        super(type, number, uid);
+    EasyFamilyNetOperand(String channelUID, int number, int netID, ChannelUID uid, int divisor) {
+        super(channelUID, number, uid);
         this.netID = netID;
+        this.divisor = divisor;
     }
 
-    protected abstract String setPath();
-
-    protected abstract String setQuery();
+    @Override
+    public void setQueries(EasyDevice device) {
+        device.queries.queryForNetMarkers = true;
+        if (this instanceof EasyFamilyNetMarkerDWord) {
+            device.queries.setNetMarkerRanger((short) (this.number * this.divisor));
+        } else {
+            device.queries.setNetMarkerRanger((short) (this.number / this.divisor));
+        }
+    }
 }

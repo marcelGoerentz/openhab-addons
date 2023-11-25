@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2022 Contributors to the openHAB project
+ * Copyright (c) 2010-2023 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -18,7 +18,8 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.openhab.core.thing.ChannelUID;
 
 /**
- * The {@link EasyFamilyFunctionBlocks} is an abstract class for representing the available function blocks on the
+ * The {@link EasyFamilyNetMarkerDWord} is an abstract class for representing the available NET Marker Double Word
+ * operands on a
  * device
  *
  * @author Marcel Goerentz - Initial contribution
@@ -27,16 +28,26 @@ import org.openhab.core.thing.ChannelUID;
 public class EasyFamilyNetMarkerDWord extends EasyFamilyNetOperand {
 
     EasyFamilyNetMarkerDWord(int number, int netID, ChannelUID uid) {
-        super(CHANNEL_MARKER_DWORDS, number, netID, uid);
+        super(CHANNEL_ID_NET_MARKER_DWORDS, number, netID, uid, 2);
     }
 
     @Override
-    protected String setPath() {
+    public String setPath() {
         return "/api/set/op";
     }
 
     @Override
-    protected String setQuery() {
-        return "?op=N&index=" + number + "&netid=" + (netID - 1) + "&val=";
+    public String setQuery() {
+        return "?op=ND&index=" + number + "&netid=" + (netID - 1) + "&val=";
+    }
+
+    @Override
+    public int getMaximumInstance() {
+        return MAX_NET_DWORD_MARKER_INSTANCE;
+    }
+
+    @Override
+    public String getAcceptedItemType() {
+        return ITEM_TYPE_NUMBER;
     }
 }
