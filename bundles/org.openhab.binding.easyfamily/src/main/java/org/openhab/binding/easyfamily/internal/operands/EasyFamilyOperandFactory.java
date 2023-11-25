@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2022 Contributors to the openHAB project
+ * Copyright (c) 2010-2023 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -32,8 +32,7 @@ import org.openhab.binding.easyfamily.internal.EasyFamilyChannelUtility;
 import org.openhab.core.thing.ChannelUID;
 
 /**
- * The {@link EasyFamilyFunctionBlocks} is an abstract class for representing the available function blocks on the
- * device
+ * The {@link EasyFamilyOperandFactory} helps creating the correct operand classes.
  *
  * @author Marcel Goerentz - Initial contribution
  */
@@ -43,45 +42,58 @@ public class EasyFamilyOperandFactory {
     public EasyFamilyOperand getOperand(ChannelUID uid) {
         EasyFamilyChannelUtility channelUtility = new EasyFamilyChannelUtility();
         channelUtility.parseChannelInfo(uid.getId());
-        if (!channelUtility.channelType.equals("")) {
+        int indexOfLastSeparator = uid.getAsString().lastIndexOf(":");
+        String id = uid.getAsString().substring(0, indexOfLastSeparator) + ":null";
+        ChannelUID nUid = new ChannelUID(id);
+        EasyFamilyOperand operand = new EasyFamilyNullOperand("", 0, nUid);
+        if (!channelUtility.channelType.isEmpty()) {
             int number = channelUtility.channelNumber;
             int netID = channelUtility.netID;
             switch (channelUtility.channelType) {
-                case CHANNEL_STATE:
-                    return new EasyFamilyProgrameState(uid);
-                case CHANNEL_IOX:
-                    return new EasyFamilyBusState(uid);
-                case CHANNEL_INPUTS:
-                    return new EasyFamilyInput(number, uid);
-                case CHANNEL_OUTPUTS:
-                    return new EasyFamilyOutput(number, uid);
-                case CHANNEL_ANALOG_INPUTS:
-                    return new EasyFamilyAnalogInput(number, uid);
-                case CHANNEL_ANALOG_OUTPUTS:
-                    return new EasyFamilyAnalogOutput(number, uid);
-                case CHANNEL_MARKERS:
-                    return new EasyFamilyMarker(number, uid);
-                case CHANNEL_MARKER_BYTES:
-                    return new EasyFamilyMarkerBytes(number, uid);
-                case CHANNEL_MARKER_WORDS:
-                    return new EasyFamilyMarkerWords(number, uid);
-                case CHANNEL_MARKER_DWORDS:
-                    return new EasyFamilyMarkerDWords(number, uid);
-                case CHANNEL_NET_MARKERS:
-                    return new EasyFamilyMarkerWords(number, uid);
-                case CHANNEL_NET_MARKER_BYTES:
-                    return new EasyFamilyNetMarkerByte(number, netID, uid);
-                case CHANNEL_NET_MARKER_WORDS:
-                    return new EasyFamilyNetMarkerWord(number, netID, uid);
-                case CHANNEL_NET_MARKER_DWORDS:
-                    return new EasyFamilyNetMarkerDWord(number, netID, uid);
-                default:
-                    String id = uid.getId();
-                    ChannelUID nUid = new ChannelUID(uid.toString().replace(id, "null"));
-                    return new EasyFamilyNullOperand("", 0, nUid);
+                case CHANNEL_STATE -> {
+                    operand = new EasyFamilyProgrameState(uid);
+                }
+                case CHANNEL_IOX -> {
+                    operand = new EasyFamilyBusState(uid);
+                }
+                case CHANNEL_INPUTS -> {
+                    operand = new EasyFamilyInput(number, uid);
+                }
+                case CHANNEL_OUTPUTS -> {
+                    operand = new EasyFamilyOutput(number, uid);
+                }
+                case CHANNEL_ANALOG_INPUTS -> {
+                    operand = new EasyFamilyAnalogInput(number, uid);
+                }
+                case CHANNEL_ANALOG_OUTPUTS -> {
+                    operand = new EasyFamilyAnalogOutput(number, uid);
+                }
+                case CHANNEL_MARKERS -> {
+                    operand = new EasyFamilyMarker(number, uid);
+                }
+                case CHANNEL_MARKER_BYTES -> {
+                    operand = new EasyFamilyMarkerBytes(number, uid);
+                }
+                case CHANNEL_MARKER_WORDS -> {
+                    operand = new EasyFamilyMarkerWord(number, uid);
+                }
+                case CHANNEL_MARKER_DWORDS -> {
+                    operand = new EasyFamilyMarkerDWord(number, uid);
+                }
+                case CHANNEL_NET_MARKERS -> {
+                    operand = new EasyFamilyNetMarker(number, netID, uid);
+                }
+                case CHANNEL_NET_MARKER_BYTES -> {
+                    operand = new EasyFamilyNetMarkerByte(number, netID, uid);
+                }
+                case CHANNEL_NET_MARKER_WORDS -> {
+                    operand = new EasyFamilyNetMarkerWord(number, netID, uid);
+                }
+                case CHANNEL_NET_MARKER_DWORDS -> {
+                    operand = new EasyFamilyNetMarkerDWord(number, netID, uid);
+                }
             }
         }
-        ChannelUID nUid = new ChannelUID("");
-        return new EasyFamilyNullOperand("", 0, nUid);
+        return operand;
     }
 }

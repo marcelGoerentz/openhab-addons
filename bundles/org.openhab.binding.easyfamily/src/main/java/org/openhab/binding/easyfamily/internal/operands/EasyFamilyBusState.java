@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2022 Contributors to the openHAB project
+ * Copyright (c) 2010-2023 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -12,14 +12,17 @@
  */
 package org.openhab.binding.easyfamily.internal.operands;
 
-import static org.openhab.binding.easyfamily.internal.EasyFamilyBindingConstants.CHANNEL_IOX;
+import static org.openhab.binding.easyfamily.internal.EasyFamilyBindingConstants.CHANNEL_ID_IOX;
+import static org.openhab.binding.easyfamily.internal.EasyFamilyBindingConstants.ITEM_TYPE_SWITCH;
+import static org.openhab.binding.easyfamily.internal.EasyFamilyBindingConstants.MAX_DEFAULT_INSTANCE;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.openhab.binding.easyfamily.internal.EasyDevice;
 import org.openhab.core.thing.ChannelUID;
 
 /**
  * The {@link EasyFamilyBusState} is responsible representating the actual Bus State of the device as a read only
- * operand it will only indicates the state
+ * operand it will only indicate the state
  *
  * @author Marcel Goerentz - Initial contribution
  */
@@ -27,7 +30,22 @@ import org.openhab.core.thing.ChannelUID;
 public class EasyFamilyBusState extends EasyFamilyReadOnlyOperand {
 
     EasyFamilyBusState(ChannelUID uid) {
-        super(CHANNEL_IOX, 0, uid);
+        super(CHANNEL_ID_IOX, 0, uid);
         this.value = 0;
+    }
+
+    @Override
+    public String getAcceptedItemType() {
+        return ITEM_TYPE_SWITCH;
+    }
+
+    @Override
+    public int getMaximumInstance() {
+        return MAX_DEFAULT_INSTANCE;
+    }
+
+    @Override
+    public void setQueries(EasyDevice device) {
+        return;
     }
 }

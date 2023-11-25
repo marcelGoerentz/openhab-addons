@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2022 Contributors to the openHAB project
+ * Copyright (c) 2010-2023 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -88,9 +88,56 @@ public class EasyFamilyBindingConstants {
     public static final short NET_MARKER_RANGE_UPPER_LIMIT = 32;
     public static final short NET_MARKER_RANGE_LOWER_LIMIT = 1;
 
+    // Maximum instances of operands
+    public static final int MAX_DEFAULT_INSTANCE = 1;
+    public static final int MAX_NET_DWORD_MARKER_INSTANCE = 16;
+    public static final int MAX_NET_WORD_MARKER_INSTANCE = 32;
+    public static final int MAX_ANALOG_IO_INSTANCE = 48;
+    public static final int MAX_NET_BYTE_MARKER_INSTANCE = 64;
+    public static final int MAX_DIGITAL_IO_INSTANCE = 128;
+    public static final int MAX_DWORD_INSTANCE = 256;
+    public static final int MAX_MARKER_INSTANCE = 512;
+
+    // Accepted item types
+    public static final String ITEM_TYPE_SWITCH = "Switch";
+    public static final String ITEM_TYPE_NUMBER = "Number";
+
     // List of all mode types
     public static final String MODE_RUN = "RUN";
     public static final String MODE_STOP = "STOP";
+
+    // List of all Properties
+    public static final String PROPERTY_MAC = "MAC address";
+    public static final String PROPERTY_FW = "Firmware version";
+    public static final String PROPERTY_BTL_VERSION = "Bootloader version";
+    public static final String PROPERTY_TYPE = "Device type";
+    public static final String PROPERTY_SERIAL = "Serialnumber";
+    public static final String PROPERTY_IP = "IP address";
+    public static final String PROPERTY_DEVICE_NAME = "Device name";
+    public static final String PROPERTY_DOMAIN = "Domain name";
+    public static final String PROPERTY_PROGRAM = "Program name";
+    public static final String PROPERTY_VENDOR = "Vendor";
+    public static final String PROPERTY_BUILD = "Build";
+    public static final String PROPERTY_DATE_OF_MANUFACTURE = "Date of manufacture";
+    public static final String PROPERTY_NET_ID = "NET ID";
+
+    public static final Map<String, String> PROPERTIES = new HashMap<>();
+
+    static {
+        PROPERTIES.put("macAddress", PROPERTY_MAC);
+        PROPERTIES.put("firmware", PROPERTY_FW);
+        PROPERTIES.put("type", PROPERTY_TYPE);
+        PROPERTIES.put("serialNumber", PROPERTY_SERIAL);
+        PROPERTIES.put("ipAddressProp", PROPERTY_IP);
+        PROPERTIES.put("deviceName", PROPERTY_DEVICE_NAME);
+        PROPERTIES.put("domainName", PROPERTY_DOMAIN);
+        PROPERTIES.put("programName", PROPERTY_PROGRAM);
+        PROPERTIES.put("vendor", PROPERTY_VENDOR);
+        PROPERTIES.put("build", PROPERTY_BUILD);
+        PROPERTIES.put("dateOfManufacture", PROPERTY_DATE_OF_MANUFACTURE);
+        PROPERTIES.put("btlVersion", PROPERTY_BTL_VERSION);
+        PROPERTIES.put("netID", PROPERTY_NET_ID);
+    }
 
     public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = new HashSet<>();
 

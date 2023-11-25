@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2022 Contributors to the openHAB project
+ * Copyright (c) 2010-2023 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -73,23 +73,20 @@ public class EasyFamilyDiscoveryService extends AbstractDiscoveryService {
         int deviceCounter = 0;
         List<EasyFamilyScanResponse> discoveryList = new ArrayList<>();
         try {
-            if (!discoveryList.isEmpty()) {
-                discoveryList.clear();
-            }
-            List<InetAddress> addresses = getIPv4Adresses();
+            List<InetAddress> addresses = getIPv4Addresses();
             // Send Broadcast on every interface
-            for (int i = 0; i < addresses.size(); i++) {
-                DatagramSocket datagramSocket = new DatagramSocket(0, addresses.get(i));
+            for (InetAddress address : addresses) {
+                DatagramSocket datagramSocket = new DatagramSocket(0, address);
                 datagramSocket.setBroadcast(true);
                 datagramSocket.setSoTimeout(2000);
-                String ipAddress = addresses.get(i).getHostAddress();
+                String ipAddress = address.getHostAddress();
                 // Define the UDP Packet
-                EasyFamilyDatagram datagram = new EasyFamilyDatagram(addresses.get(i).getAddress(),
+                EasyFamilyDatagram datagram = new EasyFamilyDatagram(address.getAddress(),
                         datagramSocket.getLocalPort());
 
                 // sending the UDP-Paket
                 InetAddress broadcastAddress = Inet4Address.getByName("255.255.255.255");
-                DatagramPacket sendPacket = new DatagramPacket(datagram.telegramm, datagram.telegramm.length,
+                DatagramPacket sendPacket = new DatagramPacket(datagram.telegram, datagram.telegram.length,
                         broadcastAddress, 11111);
                 int localPort = datagramSocket.getLocalPort();
                 datagramSocket.send(sendPacket);
@@ -126,10 +123,9 @@ public class EasyFamilyDiscoveryService extends AbstractDiscoveryService {
     /**
      * This Method retrieves all IPv4 addresses of the server
      * 
-     * @return A list of all available IPv4 Adresses that are registered
-     * @throws SocketException
+     * @return A list of all available IPv4 Addresses that are registered
      */
-    private List<InetAddress> getIPv4Adresses() throws SocketException {
+    private List<InetAddress> getIPv4Addresses() throws SocketException {
         Iterator<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces().asIterator();
         List<InetAddress> addresses = new ArrayList<>();
         // Get IPv4 addresses from all network interfaces
@@ -185,18 +181,12 @@ public class EasyFamilyDiscoveryService extends AbstractDiscoveryService {
      * Method for starting the scan
      */
     protected Runnable easyDiscoveryRunnable() {
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                startScan();
-            }
-        };
-        return runnable;
+        return this::startScan;
     }
 
     /**
      * This method will add all the found devices to the inbox list.
-     * There for it will use the {@link EasyFamilyScanResponse} class
+     * Therefor it will use the {@link EasyFamilyScanResponse} class
      */
     private void buildDiscoveryResult(int deviceCounter, List<EasyFamilyScanResponse> discoveryList) {
         // Get BundleContext for the translation
@@ -208,7 +198,7 @@ public class EasyFamilyDiscoveryService extends AbstractDiscoveryService {
             Map<String, Object> properties = new HashMap<>();
             String deviceName = scanResponse.deviceName;
             String domainName = scanResponse.deviceDomainName;
-            if ("".equals(domainName)) {
+            if (domainName.isEmpty()) {
                 properties.put(CONFIG_ID_IP_ADDRESS, scanResponse.deviceIp);
             } else {
                 properties.put(CONFIG_ID_IP_ADDRESS, deviceName + "." + domainName);
@@ -224,7 +214,7 @@ public class EasyFamilyDiscoveryService extends AbstractDiscoveryService {
                 properties.put(CONFIG_ID_PORT, scanResponse.deviceHTTPPort);
                 properties.put(CONFIG_ID_ENCRYPTION, scanResponse.deviceSSLEnable);
             }
-            if ("".equals(deviceName)) {
+            if (deviceName.isEmpty()) {
                 devicesWithoutName++;
                 deviceName = i18nProvider.getText(bundleContext.getBundle(), "deviceWithoutName", "nameless device",
                         localeProvider.getLocale()) + " (" + devicesWithoutName + ")";
@@ -242,16 +232,8 @@ public class EasyFamilyDiscoveryService extends AbstractDiscoveryService {
         this.localeProvider = localeProvider;
     }
 
-    protected void unsetLocaleProvider(final LocaleProvider localeProvider) {
-        this.localeProvider = null;
-    }
-
     @Reference
     protected void setTranslationProvider(TranslationProvider i18nProvider) {
         this.i18nProvider = i18nProvider;
-    }
-
-    protected void unsetTranslationProvider(TranslationProvider i18nProvider) {
-        this.i18nProvider = null;
     }
 }

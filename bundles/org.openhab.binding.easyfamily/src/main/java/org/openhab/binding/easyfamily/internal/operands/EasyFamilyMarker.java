@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2022 Contributors to the openHAB project
+ * Copyright (c) 2010-2023 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -12,31 +12,42 @@
  */
 package org.openhab.binding.easyfamily.internal.operands;
 
-import static org.openhab.binding.easyfamily.internal.EasyFamilyBindingConstants.*;
+import static org.openhab.binding.easyfamily.internal.EasyFamilyBindingConstants.CHANNEL_ID_MARKERS;
+import static org.openhab.binding.easyfamily.internal.EasyFamilyBindingConstants.ITEM_TYPE_SWITCH;
+import static org.openhab.binding.easyfamily.internal.EasyFamilyBindingConstants.MAX_MARKER_INSTANCE;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.openhab.core.thing.ChannelUID;
 
 /**
- * The {@link EasyFamilyFunctionBlocks} is an abstract class for representing the available function blocks on the
+ * The {@link EasyFamilyMarker} is a class for representing the available Marker operands on a
  * device
  *
  * @author Marcel Goerentz - Initial contribution
  */
 @NonNullByDefault
-public class EasyFamilyMarker extends EasyFamilyWriteableOperand {
+public class EasyFamilyMarker extends EasyFamilyMarkerOperand {
 
     EasyFamilyMarker(int number, ChannelUID uid) {
-        super(CHANNEL_MARKERS, number, uid);
+        super(CHANNEL_ID_MARKERS, number, uid, 16);
     }
 
     @Override
-    protected String setPath() {
+    public String setPath() {
         return "/api/set/op";
     }
 
     @Override
-    protected String setQuery() {
+    public String setQuery() {
         return "?op=M&index=" + number + "&val=";
+    }
+
+    public String getAcceptedItemType() {
+        return ITEM_TYPE_SWITCH;
+    }
+
+    @Override
+    public int getMaximumInstance() {
+        return MAX_MARKER_INSTANCE;
     }
 }

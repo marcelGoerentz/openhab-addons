@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2022 Contributors to the openHAB project
+ * Copyright (c) 2010-2023 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -16,19 +16,19 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.openhab.core.thing.ChannelUID;
 
 /**
- * The {@link EasyFamilyFunctionBlocks} is an abstract class for representing the available function blocks on the
+ * The {@link EasyFamilyWriteableOperand} is an abstract class for representing the writeable operands of a
  * device
  *
  * @author Marcel Goerentz - Initial contribution
  */
 @NonNullByDefault
-public abstract class EasyFamilyWriteableOperand extends EasyFamilyOperand {
+public abstract class EasyFamilyWriteableOperand extends EasyFamilyOperand implements WebAccess {
 
-    public final String path;
-    public final String query;
+    private final String path;
+    private final String query;
 
-    EasyFamilyWriteableOperand(String type, int number, ChannelUID uid) {
-        super(type, number, uid);
+    EasyFamilyWriteableOperand(String channelUID, int number, ChannelUID uid) {
+        super(channelUID, number, uid);
         this.path = setPath();
         this.query = setQuery();
     }
@@ -37,11 +37,7 @@ public abstract class EasyFamilyWriteableOperand extends EasyFamilyOperand {
         return this.path;
     }
 
-    protected abstract String setPath();
-
     public String getQuery() {
         return this.query;
     }
-
-    protected abstract String setQuery();
 }

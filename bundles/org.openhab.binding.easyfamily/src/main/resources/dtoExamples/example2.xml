@@ -1,0 +1,38 @@
+<ec:xnfo xmlns:ec="x-schema:ecSchema.xdr" c="">
+	<ec:e adr="1">
+		<ec:i ich="0"></ec:i>
+		<ec:r n="CFGDATA" v="00000000"/>
+		<ec:cm n="O::T01"> Jitter Filter   </ec:cm>
+		<ec:cm n="O::IA11"> Vorlauf Heizkreis 3   </ec:cm>
+		<ec:cm n="O::M01"> openHAB Warmwasser   </ec:cm>
+		<ec:cm n="O::Q28"> Pumpe Zirkulation   </ec:cm>
+		<ec:cm n="O::IA13"> Vorlauf Heizkreis 1   </ec:cm>
+		<ec:cm n="O::Q27"> Pumpe Heizkreis 3   </ec:cm>
+		<ec:cm n="O::Q04"> Pumpe Heizkreis 2   </ec:cm>
+		<ec:cm n="O::M03"> Regelung aktivieren   </ec:cm>
+		<ec:cm n="O::IA12"> Vorlauf Heizkreis 2   </ec:cm>
+		<ec:cm n="O::Q26"> HK 3 Mischer Wärmer   </ec:cm>
+		<ec:cm n="O::M02"> Warmwasser aktiv   </ec:cm>
+		<ec:cm n="O::Q25"> HK 3 Mischer Kälter   </ec:cm>
+		<ec:cm n="O::M05"> Warmwasser Zirkulation   </ec:cm>
+		<ec:cm n="O::IA14"> Rücklauf Warmwasser   </ec:cm>
+		<ec:cm n="O::MB03"> Temperatur Warmwasser   </ec:cm>
+		<ec:cm n="O::Q24"> HK 2 Mischer Wärmer   </ec:cm>
+		<ec:cm n="O::M04"> Zirkulation   </ec:cm>
+		<ec:cm n="O::Q01"> Magnet Ventile   </ec:cm>
+		<ec:cm n="O::Q23"> HK 2 Mischer Kälter   </ec:cm>
+		<ec:cm n="O::Q22"> HK 1 Mischer Wärmer   </ec:cm>
+		<ec:cm n="S::1"> Unbenannt   </ec:cm>
+		<ec:cm n="O::Q03"> Pumpe Heizkreis 1   </ec:cm>
+		<ec:cm n="O::Q21"> HK1 Mischer Kälter   </ec:cm>
+		<ec:cm n="KEYS">
+			O::T01^O::IA11^O::M01^O::Q28^O::IA13^O::Q27^O::Q04^O::M03^O::IA12^O::Q26^O::M02^O::Q25^O::M05^O::IA14^O::MB03^O::Q24^O::M04^O::Q01^O::Q23^O::Q22^S::1^O::Q03^O::Q21^
+		</ec:cm>
+	</ec:e>
+	<ec:e adr="1">
+		<ec:p n="COMMENT" v=""/>
+	</ec:e>
+	<ec:e adr="2">
+		<ec:p n="COMMENT" v=""/>
+	</ec:e>
+</ec:xnfo>
