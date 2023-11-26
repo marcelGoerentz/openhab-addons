@@ -128,10 +128,30 @@ public interface CommonInterface {
                 : recurseUpToHomeHandler(handler.getBridgeHandler());
     }
 
+    /**
+     * Recurses down in the home/module/device tree
+     *
+     * @param bridge
+     * @return the list of childs of the bridge
+     */
+    default List<CommonInterface> getAllActiveChildren(Bridge bridge) {
+        List<CommonInterface> result = new ArrayList<>();
+        bridge.getThings().stream().filter(Thing::isEnabled).map(Thing::getHandler).forEach(childHandler -> {
+            if (childHandler != null) {
+                Thing childThing = childHandler.getThing();
+                if (childThing instanceof Bridge bridgeChild) {
+                    result.addAll(getAllActiveChildren(bridgeChild));
+                }
+                result.add((CommonInterface) childHandler);
+            }
+        });
+        return result;
+    }
+
     default List<CommonInterface> getActiveChildren() {
         Thing thing = getThing();
-        if (thing instanceof Bridge) {
-            return ((Bridge) thing).getThings().stream().filter(Thing::isEnabled)
+        if (thing instanceof Bridge bridge) {
+            return bridge.getThings().stream().filter(Thing::isEnabled)
                     .filter(th -> th.getStatusInfo().getStatusDetail() != ThingStatusDetail.BRIDGE_OFFLINE)
                     .map(Thing::getHandler).filter(Objects::nonNull).map(CommonInterface.class::cast).toList();
         }
@@ -148,8 +168,7 @@ public interface CommonInterface {
     }
 
     default void setNewData(NAObject newData) {
-        if (newData instanceof NAThing) {
-            NAThing thingData = (NAThing) newData;
+        if (newData instanceof NAThing thingData) {
             if (getId().equals(thingData.getBridge())) {
                 getActiveChildren().stream().filter(child -> child.getId().equals(thingData.getId())).findFirst()
                         .ifPresent(child -> child.setNewData(thingData));

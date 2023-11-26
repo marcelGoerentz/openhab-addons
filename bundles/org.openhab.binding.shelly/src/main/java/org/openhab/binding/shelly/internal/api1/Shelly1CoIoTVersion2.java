@@ -126,6 +126,9 @@ public class Shelly1CoIoTVersion2 extends Shelly1CoIoTProtocol implements Shelly
                         thingHandler.requestUpdates(1, false);
                     }
                     break;
+                case "3122": // boost mode, Type=S, Range=0/1
+                    updateChannel(updates, CHANNEL_GROUP_CONTROL, CHANNEL_CONTROL_BCONTROL, getOnOff(value > 0));
+                    break;
                 default:
                     processed = false;
             }
@@ -210,7 +213,6 @@ public class Shelly1CoIoTVersion2 extends Shelly1CoIoTProtocol implements Shelly
                 break;
             case "3104": // T, deviceTemp, Celsius -40/300; 999=unknown
                 if ("targetTemp".equalsIgnoreCase(sen.desc)) {
-
                     break; // target temp in F-> ignore
                 }
                 // sensor_0: T, internalTemp, F, 39/88, unknown 999
@@ -383,7 +385,7 @@ public class Shelly1CoIoTVersion2 extends Shelly1CoIoTProtocol implements Shelly
                 }
                 break;
             case "9102": // EV, wakeupEvent, battery/button/periodic/poweron/sensor/ext_power, "unknown"=unknown
-                if (s.valueArray.size() > 0) {
+                if (!s.valueArray.isEmpty()) {
                     thingHandler.updateWakeupReason(s.valueArray);
                     lastWakeup = (String) s.valueArray.get(0);
                 }
