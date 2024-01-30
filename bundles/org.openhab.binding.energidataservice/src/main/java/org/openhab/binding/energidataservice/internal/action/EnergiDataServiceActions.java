@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -45,6 +45,8 @@ import org.openhab.core.library.unit.Units;
 import org.openhab.core.thing.binding.ThingActions;
 import org.openhab.core.thing.binding.ThingActionsScope;
 import org.openhab.core.thing.binding.ThingHandler;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ServiceScope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,6 +55,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Jacob Laursen - Initial contribution
  */
+@Component(scope = ServiceScope.PROTOTYPE, service = EnergiDataServiceActions.class)
 @ThingActionsScope(name = "energidataservice")
 @NonNullByDefault
 public class EnergiDataServiceActions implements ThingActions {
@@ -63,11 +66,11 @@ public class EnergiDataServiceActions implements ThingActions {
 
     private enum PriceComponent {
         SPOT_PRICE("spotprice", null),
-        NET_TARIFF("nettariff", DatahubTariff.NET_TARIFF),
+        GRID_TARIFF("gridtariff", DatahubTariff.GRID_TARIFF),
         SYSTEM_TARIFF("systemtariff", DatahubTariff.SYSTEM_TARIFF),
+        TRANSMISSION_GRID_TARIFF("transmissiongridtariff", DatahubTariff.TRANSMISSION_GRID_TARIFF),
         ELECTRICITY_TAX("electricitytax", DatahubTariff.ELECTRICITY_TAX),
-        REDUCED_ELECTRICITY_TAX("reducedelectricitytax", DatahubTariff.REDUCED_ELECTRICITY_TAX),
-        TRANSMISSION_NET_TARIFF("transmissionnettariff", DatahubTariff.TRANSMISSION_NET_TARIFF);
+        REDUCED_ELECTRICITY_TAX("reducedelectricitytax", DatahubTariff.REDUCED_ELECTRICITY_TAX);
 
         private static final Map<String, PriceComponent> NAME_MAP = Stream.of(values())
                 .collect(Collectors.toMap(PriceComponent::toString, Function.identity()));
@@ -125,7 +128,7 @@ public class EnergiDataServiceActions implements ThingActions {
 
         Set<PriceComponent> priceComponentsSet;
         try {
-            priceComponentsSet = new HashSet<PriceComponent>(
+            priceComponentsSet = new HashSet<>(
                     Arrays.stream(priceComponents.split(",")).map(PriceComponent::fromString).toList());
         } catch (IllegalArgumentException e) {
             logger.warn("{}", e.getMessage());
