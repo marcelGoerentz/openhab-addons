@@ -144,11 +144,9 @@
     <module>org.openhab.binding.bluetooth.generic</module>
         
     <module>org.openhab.binding.bluetooth.govee</module>
-<<<<<<< HEAD
-        
-=======
+	
     <module>org.openhab.binding.bluetooth.grundfosalpha</module>
->>>>>>> main
+	
     <module>org.openhab.binding.bluetooth.radoneye</module>
         
     <module>org.openhab.binding.bluetooth.roaming</module>
@@ -286,11 +284,9 @@
     <module>org.openhab.binding.freebox</module>
         
     <module>org.openhab.binding.freeboxos</module>
-<<<<<<< HEAD
         
-=======
     <module>org.openhab.binding.freecurrency</module>
->>>>>>> main
+        
     <module>org.openhab.binding.fronius</module>
         
     <module>org.openhab.binding.fsinternetradio</module>
@@ -304,11 +300,9 @@
     <module>org.openhab.binding.generacmobilelink</module>
         
     <module>org.openhab.binding.goecharger</module>
-<<<<<<< HEAD
         
-=======
     <module>org.openhab.binding.govee</module>
->>>>>>> main
+        
     <module>org.openhab.binding.gpio</module>
         
     <module>org.openhab.binding.globalcache</module>
@@ -316,17 +310,13 @@
     <module>org.openhab.binding.gpstracker</module>
         
     <module>org.openhab.binding.gree</module>
-<<<<<<< HEAD
-        
-    <module>org.openhab.binding.groupepsa</module>
         
     <module>org.openhab.binding.groheondus</module>
         
-=======
-    <module>org.openhab.binding.groheondus</module>
     <module>org.openhab.binding.groupepsa</module>
+        
     <module>org.openhab.binding.growatt</module>
->>>>>>> main
+        
     <module>org.openhab.binding.guntamatic</module>
         
     <module>org.openhab.binding.haassohnpelletstove</module>
@@ -598,11 +588,9 @@
     <module>org.openhab.binding.orbitbhyve</module>
         
     <module>org.openhab.binding.orvibo</module>
-<<<<<<< HEAD
         
-=======
     <module>org.openhab.binding.panasonicbdp</module>
->>>>>>> main
+        
     <module>org.openhab.binding.paradoxalarm</module>
         
     <module>org.openhab.binding.pentair</module>
@@ -708,11 +696,9 @@
     <module>org.openhab.binding.smartmeter</module>
         
     <module>org.openhab.binding.smartthings</module>
-<<<<<<< HEAD
         
-=======
     <module>org.openhab.binding.smgw</module>
->>>>>>> main
+        
     <module>org.openhab.binding.smhi</module>
         
     <module>org.openhab.binding.smsmodem</module>
@@ -728,9 +714,9 @@
     <module>org.openhab.binding.solarmax</module>
         
     <module>org.openhab.binding.solarwatt</module>
-	
+        
     <module>org.openhab.binding.solax</module>
-	
+        
     <module>org.openhab.binding.somfymylink</module>
         
     <module>org.openhab.binding.somfytahoma</module>
@@ -900,21 +886,15 @@
     <module>org.openhab.voice.marytts</module>
         
     <module>org.openhab.voice.mimictts</module>
-<<<<<<< HEAD
         
     <module>org.openhab.voice.actiontemplatehli</module>
         
-=======
->>>>>>> main
     <module>org.openhab.voice.picotts</module>
         
     <module>org.openhab.voice.pollytts</module>
-<<<<<<< HEAD
         
     <module>org.openhab.voice.porcupineks</module>
         
-=======
->>>>>>> main
     <module>org.openhab.voice.rustpotterks</module>
         
     <module>org.openhab.voice.voicerss</module>
