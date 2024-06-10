@@ -23,10 +23,13 @@ import org.openhab.core.thing.ThingTypeUID;
  */
 @NonNullByDefault
 public class SmgwBindingConstants {
-    private static final String BINDING_ID = "smgw";
+    public static final String BINDING_ID = "smgw";
 
     public static final ThingTypeUID THING_TYPE_SMGW = new ThingTypeUID(BINDING_ID, "smgw");
 
     public static final String CHANNEL_METER = "meter";
     public static final String CHANNEL_TIMESTAMP = "timestamp";
+
+    public static final String CHANNEL_TYPE_METER = "electric-energy";
+    public static final String CHANNEL_TYPE_TIMESTAMP = "timestamp";
 }

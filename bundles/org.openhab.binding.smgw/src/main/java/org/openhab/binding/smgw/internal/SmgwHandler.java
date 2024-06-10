@@ -12,8 +12,9 @@
  */
 package org.openhab.binding.smgw.internal;
 
-import static org.openhab.binding.smgw.internal.SmgwBindingConstants.CHANNEL_METER;
+import static org.openhab.binding.smgw.internal.SmgwBindingConstants.BINDING_ID;
 import static org.openhab.binding.smgw.internal.SmgwBindingConstants.CHANNEL_TIMESTAMP;
+import static org.openhab.binding.smgw.internal.SmgwBindingConstants.CHANNEL_TYPE_METER;
 
 import java.net.CookieStore;
 import java.net.HttpCookie;
@@ -21,6 +22,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -45,11 +47,15 @@ import org.openhab.core.library.types.DateTimeType;
 import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.scheduler.CronScheduler;
 import org.openhab.core.scheduler.ScheduledCompletableFuture;
+import org.openhab.core.thing.Channel;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingStatus;
 import org.openhab.core.thing.ThingStatusDetail;
 import org.openhab.core.thing.binding.BaseThingHandler;
+import org.openhab.core.thing.binding.builder.ChannelBuilder;
+import org.openhab.core.thing.binding.builder.ThingBuilder;
+import org.openhab.core.thing.type.ChannelTypeUID;
 import org.openhab.core.types.Command;
 import org.openhab.core.types.RefreshType;
 import org.slf4j.Logger;
@@ -69,6 +75,8 @@ public class SmgwHandler extends BaseThingHandler {
     private SmgwConfiguration config = new SmgwConfiguration();
     private URI uri = URI_NOT_SET;
     private @Nullable ScheduledCompletableFuture<?> cronJob;
+    private boolean channelsCreated = false;
+    private List<String> channelIDs = new ArrayList<>();
 
     public SmgwHandler(Thing thing, HttpClient httpClient, CronScheduler cronScheduler) {
         super(thing);
@@ -179,25 +187,92 @@ public class SmgwHandler extends BaseThingHandler {
         if (t != null || response == null) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR);
         } else {
-            Element valueElement = response.document().selectFirst("#table_metervalues_col_wert");
-            Element unitElement = response.document().selectFirst("#table_metervalues_col_einheit");
-            Element dateTimeElement = response.document().selectFirst("#table_metervalues_col_timestamp");
-            if (valueElement == null || unitElement == null || dateTimeElement == null) {
-                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR);
+            Element meterTables = response.document().getElementById("metervalue");
+            if (!channelsCreated) {
+                channelsCreated = true;
+                createChannelsFromTableFindings(meterTables);
+            }
+            if (!channelIDs.isEmpty()) {
+                Element saveDateTimeElement = null;
+                for (int i = 0; i < 10; i++) {
+                    Element meter = response.document().selectFirst("#table_metervalues_line" + (i + 1));
+                    if (meter == null) {
+                        break;
+                    } else {
+                        Element valueElement = meter.selectFirst("#table_metervalues_col_wert");
+                        Element unitElement = meter.selectFirst("#table_metervalues_col_einheit");
+                        Element dateTimeElement = meter.selectFirst("#table_metervalues_col_timestamp");
+                        if (dateTimeElement == null) {
+                            dateTimeElement = saveDateTimeElement;
+                        }
+                        if (valueElement == null || unitElement == null || dateTimeElement == null) {
+                            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR);
+                        } else {
+                            saveDateTimeElement = dateTimeElement;
+                            QuantityType<Energy> value = new QuantityType<>(
+                                    valueElement.text() + " " + unitElement.text());
+                            DateTimeType dateTime = DateTimeType.valueOf(dateTimeElement.text().replace(" ", "T"));
+                            updateState(channelIDs.get(i * 2), value);
+                            updateState(channelIDs.get(i * 2 + 1), dateTime);
+                            updateStatus(ThingStatus.ONLINE);
+                        }
+                    }
+                }
             } else {
-                QuantityType<Energy> value = new QuantityType<>(valueElement.text() + " " + unitElement.text());
-                DateTimeType dateTime = DateTimeType.valueOf(dateTimeElement.text().replace(" ", "T"));
-
-                updateState(CHANNEL_METER, value);
-                updateState(CHANNEL_TIMESTAMP, dateTime);
-                updateStatus(ThingStatus.ONLINE);
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR);
             }
         }
         ScheduledCompletableFuture<?> cronJob = this.cronJob;
         if (cronJob == null || cronJob.isDone()) {
-            this.cronJob = cronScheduler.schedule(this::getData, "5 0/15 * * * ? *");
+            this.cronJob = cronScheduler.schedule(this::getData, "5 * * * * ? *");
         }
         return null;
+    }
+
+    private void createChannelsFromTableFindings(@Nullable Element meterValue) {
+        if (meterValue == null) {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR);
+        } else {
+            List<Channel> newChannelList = new ArrayList<>();
+            for (int i = 1; i < 11; i++) {
+                Element meter = meterValue.selectFirst("#table_metervalues_line" + i);
+                if (meter == null) {
+                    break;
+                } else {
+                    Element nameElement = meter.selectFirst("#table_metervalues_col_name");
+                    if (nameElement == null) {
+                        updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR);
+                    } else {
+                        String channelName = nameElement.text();
+                        String channelID = channelName.replace(" ", "-");
+                        channelID = channelID.substring(0, channelID.lastIndexOf("-")); // Zählerstand is not valid
+                        channelIDs.add(channelID);
+                        ChannelUID channelUID = new ChannelUID(thing.getUID().getAsString() + ":" + channelID);
+                        ChannelTypeUID typeUID = new ChannelTypeUID("system", CHANNEL_TYPE_METER);
+                        Channel newChannel = ChannelBuilder.create(channelUID, "Number:Energy").withLabel(channelName)
+                                .withType(typeUID).build();
+                        newChannelList.add(newChannel);
+                        channelID += "-Timestamp";
+                        channelIDs.add(channelID);
+                        channelName += " Timestamp";
+                        channelUID = new ChannelUID(thing.getUID().getAsString() + ":" + channelID);
+                        typeUID = new ChannelTypeUID(BINDING_ID, CHANNEL_TIMESTAMP);
+                        newChannel = ChannelBuilder.create(channelUID, "DateTime").withLabel(channelName)
+                                .withType(typeUID).build();
+                        newChannelList.add(newChannel);
+                    }
+                }
+            }
+            if (newChannelList.isEmpty()) {
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR);
+            } else {
+                ThingBuilder thingBuilder = editThing();
+                thingBuilder.withoutChannels(thing.getChannels()); // remove the old channels so there won't be
+                                                                   // duplicates
+                Thing updatedThing = thingBuilder.withChannels(newChannelList).build();
+                updateThing(updatedThing);
+            }
+        }
     }
 
     private static class ResponseListener extends BufferingResponseListener {
