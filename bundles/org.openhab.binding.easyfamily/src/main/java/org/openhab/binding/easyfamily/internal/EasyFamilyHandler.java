@@ -19,6 +19,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -46,6 +47,7 @@ import org.openhab.binding.easyfamily.internal.httpclient.EasyFamilyHttpResponse
 import org.openhab.binding.easyfamily.internal.httpclient.PingClient;
 import org.openhab.binding.easyfamily.internal.operands.*;
 import org.openhab.binding.easyfamily.internal.utility.HandlerUtility;
+import org.openhab.core.common.ThreadPoolManager;
 import org.openhab.core.i18n.LocaleProvider;
 import org.openhab.core.i18n.TranslationProvider;
 import org.openhab.core.library.types.DecimalType;
@@ -83,6 +85,7 @@ public class EasyFamilyHandler extends BaseThingHandler {
     private final EasyDevice device;
 
     private @Nullable ScheduledFuture<?> getInfo;
+    private ExecutorService easyFamilyThreadPool = ThreadPoolManager.getPool("easyFamilyThreadPool");
 
     private EasyFamilyConfiguration config;
     private EasyFamilyHttpClient client;
@@ -520,6 +523,18 @@ public class EasyFamilyHandler extends BaseThingHandler {
         DataResponse data = new Gson().fromJson(response.content, DataResponse.class);
         DataResponse dataResponse = null != data ? data : new DataResponse();
 
+        easyFamilyThreadPool.submit(() -> {
+            setStateChannel(dataResponse.sysinfo.state);
+        });
+        easyFamilyThreadPool.submit(() -> {
+            setIOXChannelState(dataResponse.sysinfo.extState.extBus);
+        });
+        easyFamilyThreadPool.submit(() -> {
+            setIOsState(dataResponse.operands);
+        });
+        easyFamilyThreadPool.submit(() -> {
+            setMarkers(dataResponse.operands, outOfMarkerRange, outOfNetMarkerRange);
+        });
         setStateChannel(dataResponse.sysinfo.state);
         setIOXChannelState(dataResponse.sysinfo.extState.extBus);
         setIOsState(dataResponse.operands);
