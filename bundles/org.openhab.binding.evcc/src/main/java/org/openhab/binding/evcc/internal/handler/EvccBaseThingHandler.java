@@ -148,7 +148,7 @@ public abstract class EvccBaseThingHandler extends BaseThingHandler implements E
         }
     }
 
-    private void createChannel(String thingKey, ThingBuilder builder, JsonElement value) {
+    protected void createChannel(String thingKey, ThingBuilder builder, JsonElement value) {
         ChannelTypeUID channelTypeUID = new ChannelTypeUID(BINDING_ID, thingKey);
         ItemTypeUnit typeUnit = getItemType(channelTypeUID);
         String itemType = typeUnit.itemType;
@@ -194,7 +194,7 @@ public abstract class EvccBaseThingHandler extends BaseThingHandler implements E
         return new ItemTypeUnit(channelType, Units.ONE);
     }
 
-    private void setItemValue(ItemTypeUnit itemTypeUnit, ChannelUID channelUID, JsonElement value) {
+    protected void setItemValue(ItemTypeUnit itemTypeUnit, ChannelUID channelUID, JsonElement value) {
         if (value.isJsonNull() || itemTypeUnit.itemType.isEmpty()) {
             return;
         }
@@ -252,8 +252,7 @@ public abstract class EvccBaseThingHandler extends BaseThingHandler implements E
         return (type + "-" + Utils.sanitizeChannelID(key));
     }
 
-    @Override
-    public void updateFromEvccState(JsonObject state) {
+    public void updateStatesFromApiResponse(JsonObject state) {
         if (!isInitialized || state.isEmpty()) {
             return;
         }
@@ -381,7 +380,7 @@ public abstract class EvccBaseThingHandler extends BaseThingHandler implements E
         }
     }
 
-    private static class ItemTypeUnit {
+    protected static class ItemTypeUnit {
         private final Unit<?> unit;
         private final String unitHint;
         private final String itemType;
