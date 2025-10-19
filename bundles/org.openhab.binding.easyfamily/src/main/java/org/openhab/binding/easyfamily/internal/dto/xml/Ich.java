@@ -12,36 +12,24 @@
  */
 package org.openhab.binding.easyfamily.internal.dto.xml;
 
-import org.eclipse.jdt.annotation.NonNullByDefault;
-
+import com.thoughtworks.xstream.annotations.XStreamAlias;
 import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
-import com.thoughtworks.xstream.annotations.XStreamConverter;
-import com.thoughtworks.xstream.converters.extended.ToAttributedValueConverter;
 
 /**
  * The {@link Ich} class manages the httpClient connection.
  *
  * @author Marcel Goerentz - Initial contribution
  */
-@NonNullByDefault
-@XStreamConverter(value = ToAttributedValueConverter.class, strings = { "data" })
+@XStreamAlias("i")
 public class Ich {
-
     @XStreamAsAttribute
-    private final String ich;
-
-    private final String data;
-
-    public Ich(String ich) {
-        this.ich = ich;
-        this.data = "";
-    }
+    private String ich;
 
     public String getIch() {
         return ich;
     }
 
-    public String getData() {
-        return data;
+    public void setIch(String ich) {
+        this.ich = ich;
     }
 }

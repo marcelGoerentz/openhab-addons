@@ -12,44 +12,29 @@
  */
 package org.openhab.binding.easyfamily.internal.dto.xml;
 
-import org.eclipse.jdt.annotation.NonNullByDefault;
-
 import com.thoughtworks.xstream.annotations.XStreamAlias;
-import com.thoughtworks.xstream.annotations.XStreamConverter;
-import com.thoughtworks.xstream.converters.extended.ToAttributedValueConverter;
+import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
 
-/**
- * The {@link Comment} class manages .
- *
- * @author Marcel Goerentz - Initial contribution
- */
-@NonNullByDefault
-@XStreamConverter(value = ToAttributedValueConverter.class, strings = { "comment" })
+@XStreamAlias("cm")
 public class Comment {
+    @XStreamAsAttribute
+    private String n;
 
-    @XStreamAlias("n")
-    private String name;
+    private String text;
 
-    private String comment;
-
-    public Comment(String name, String comment) {
-        this.name = name;
-        this.comment = comment;
+    public String getN() {
+        return n;
     }
 
-    public String getName() {
-        return name;
+    public void setN(String n) {
+        this.n = n;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public String getText() {
+        return text;
     }
 
-    public String getComment() {
-        return comment;
-    }
-
-    public void setComment(String comment) {
-        this.comment = comment;
+    public void setText(String text) {
+        this.text = text;
     }
 }

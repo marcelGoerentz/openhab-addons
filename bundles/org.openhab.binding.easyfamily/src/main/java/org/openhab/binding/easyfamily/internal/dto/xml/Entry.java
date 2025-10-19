@@ -12,92 +12,45 @@
  */
 package org.openhab.binding.easyfamily.internal.dto.xml;
 
-import java.util.List;
-
-import org.eclipse.jdt.annotation.NonNullByDefault;
-
 import com.thoughtworks.xstream.annotations.XStreamAlias;
-import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
-import com.thoughtworks.xstream.annotations.XStreamImplicit;
 
 /**
  * The {@link Entry} class manages .
  *
  * @author Marcel Goerentz - Initial contribution
  */
-@NonNullByDefault
+@XStreamAlias("e")
 public class Entry {
-
-    @XStreamAsAttribute
-    private final String adr;
-
     @XStreamAlias("i")
-    private final Ich ich;
+    private Ich ich;
 
     @XStreamAlias("r")
-    private final ConfigData config;
+    private ConfigData config;
 
     @XStreamAlias("p")
-    private PData pData;
+    private PData p;
 
-    /**
-     * @return the pData
-     */
-    public PData getpData() {
-        return pData;
+    public PData getP() {
+        return p;
     }
 
-    /**
-     * @param pData the pData to set
-     */
-    public void setpData(PData pData) {
-        this.pData = pData;
+    public void setP(PData p) {
+        this.p = p;
     }
 
-    @XStreamImplicit
-    private List<Comment> commentsList;
-
-    public Entry(String adr, Ich ich, ConfigData config, List<Comment> commentsList, PData pData) {
-        this.adr = adr;
-        this.ich = ich;
-        this.config = config;
-        this.commentsList = commentsList;
-        this.pData = pData;
-    }
-
-    public void setCommentsList(List<Comment> commentsList) {
-        this.commentsList = commentsList;
-    }
-
-    public void addComment(Comment comment) {
-        commentsList.add(comment);
-    }
-
-    /**
-     * @return the adr
-     */
-    public String getAdr() {
-        return adr;
-    }
-
-    /**
-     * @return the ich
-     */
     public Ich getIch() {
         return ich;
     }
 
-    /**
-     * @return the config
-     */
+    public void setIch(Ich ich) {
+        this.ich = ich;
+    }
+
     public ConfigData getConfig() {
         return config;
     }
 
-    /**
-     * @return the commentsList
-     */
-    public List<Comment> getCommentsList() {
-        return commentsList;
+    public void setConfig(ConfigData config) {
+        this.config = config;
     }
 }

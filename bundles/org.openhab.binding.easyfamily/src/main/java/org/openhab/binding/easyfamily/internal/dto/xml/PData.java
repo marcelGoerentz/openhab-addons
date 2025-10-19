@@ -12,51 +12,43 @@
  */
 package org.openhab.binding.easyfamily.internal.dto.xml;
 
-import org.eclipse.jdt.annotation.NonNullByDefault;
-
 import com.thoughtworks.xstream.annotations.XStreamAlias;
+import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
 
 /**
  * @author Marcel Goerentz - Initial contribution
  */
-@NonNullByDefault
+@XStreamAlias("p")
 public class PData {
 
-    @XStreamAlias("n")
-    private String name;
+    @XStreamAsAttribute
+    private String n;
 
-    @XStreamAlias("v")
-    private String value;
+    @XStreamAsAttribute
+    private String v;
 
-    public PData(String name, String value) {
-        this.name = name;
-        this.value = value;
+    private String value; // Textinhalt zwischen <p>...</p>
+
+    public String getN() {
+        return n;
     }
 
-    /**
-     * @return the name
-     */
-    public String getName() {
-        return name;
+    public void setN(String n) {
+        this.n = n;
     }
 
-    /**
-     * @param name the name to set
-     */
-    public void setName(String name) {
-        this.name = name;
+    public String getV() {
+        return v;
     }
 
-    /**
-     * @return the value
-     */
+    public void setV(String v) {
+        this.v = v;
+    }
+
     public String getValue() {
         return value;
     }
 
-    /**
-     * @param value the value to set
-     */
     public void setValue(String value) {
         this.value = value;
     }

@@ -37,6 +37,7 @@ import org.openhab.binding.easyfamily.internal.dto.json.data.Operands;
 import org.openhab.binding.easyfamily.internal.dto.json.login.LoginResponse;
 import org.openhab.binding.easyfamily.internal.dto.json.login.Sysinfo;
 import org.openhab.binding.easyfamily.internal.dto.xml.Comment;
+import org.openhab.binding.easyfamily.internal.dto.xml.CommentConverter;
 import org.openhab.binding.easyfamily.internal.dto.xml.ConfigData;
 import org.openhab.binding.easyfamily.internal.dto.xml.Entry;
 import org.openhab.binding.easyfamily.internal.dto.xml.Ich;
@@ -449,7 +450,9 @@ public class EasyFamilyHandler extends BaseThingHandler {
 
     private XStream setUpXStream() {
         XStream xstream = new XStream(new StaxDriver());
-        xstream.allowTypesByWildcard(new String[] { EasyFamilyHandler.class.getPackageName() + ".**" });
+        xstream.registerConverter(new CommentConverter());
+        xstream.allowTypes(
+                new Class[] { XNFO.class, Entry.class, Ich.class, ConfigData.class, PData.class, Comment.class });
         xstream.setClassLoader(getClass().getClassLoader());
         xstream.autodetectAnnotations(true);
         xstream.alias("xnfo", XNFO.class);
@@ -464,14 +467,14 @@ public class EasyFamilyHandler extends BaseThingHandler {
     private List<Channel> generateChannels(XStream xStream, String response, List<EasyFamilyOperand> operands) {
         XNFO xml = (XNFO) xStream.fromXML(response);
         xml.stripComments();
-        List<Comment> comments = xml.getCommentList();
+        List<Comment> comments = xml.getEntries().getFirst().getConfig().getCm();
         List<Channel> commentaryChannelList = new ArrayList<>();
         Channel commentChannel;
         EasyFamilyOperandFactory operandFactory = new EasyFamilyOperandFactory();
         for (Comment comment : comments) {
-            String channelUID = thing.getUID().getAsString() + ":" + comment.getName();
+            String channelUID = thing.getUID().getAsString() + ":" + comment.getN();
             EasyFamilyOperand operand = operandFactory.getOperand(new ChannelUID(channelUID));
-            commentChannel = operand.createChannelFromOperand(comment.getComment());
+            commentChannel = operand.createChannelFromOperand(comment.getText());
             if (commentChannel != null) {
                 commentaryChannelList.add(commentChannel);
                 operands.add(operand);

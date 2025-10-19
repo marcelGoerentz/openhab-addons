@@ -12,37 +12,44 @@
  */
 package org.openhab.binding.easyfamily.internal.dto.xml;
 
-import org.eclipse.jdt.annotation.NonNullByDefault;
+import java.util.List;
 
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
+import com.thoughtworks.xstream.annotations.XStreamImplicit;
 
-/**
- * The {@link ConfigData} class manages .
- *
- * @author Marcel Goerentz - Initial contribution
- */
-@NonNullByDefault
+@XStreamAlias("r")
 public class ConfigData {
-
-    @XStreamAlias("n")
     @XStreamAsAttribute
-    private final String name;
+    private String n;
 
-    @XStreamAlias("v")
     @XStreamAsAttribute
-    private final String version;
+    private String v;
 
-    public ConfigData(String n, String v) {
-        name = n;
-        version = v;
+    @XStreamImplicit(itemFieldName = "cm")
+    private List<Comment> cm;
+
+    public String getN() {
+        return n;
     }
 
-    public String getName() {
-        return name;
+    public void setN(String n) {
+        this.n = n;
     }
 
-    public String getVersion() {
-        return version;
+    public String getV() {
+        return v;
+    }
+
+    public void setV(String v) {
+        this.v = v;
+    }
+
+    public List<Comment> getCm() {
+        return cm;
+    }
+
+    public void setCm(List<Comment> cm) {
+        this.cm = cm;
     }
 }

@@ -15,10 +15,7 @@ package org.openhab.binding.easyfamily.internal.dto.xml;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.eclipse.jdt.annotation.NonNullByDefault;
-
 import com.thoughtworks.xstream.annotations.XStreamAlias;
-import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
 import com.thoughtworks.xstream.annotations.XStreamImplicit;
 
 /**
@@ -26,54 +23,37 @@ import com.thoughtworks.xstream.annotations.XStreamImplicit;
  *
  * @author Marcel Goerentz - Initial contribution
  */
-@NonNullByDefault
+@XStreamAlias("xnfo")
 public class XNFO {
 
-    @XStreamAlias("xmlns:ec")
-    private final String xmlnsSchema;
+    @XStreamImplicit(itemFieldName = "e")
+    private List<Entry> entries;
 
-    @XStreamAsAttribute
-    private final String c;
+    public List<Entry> getEntries() {
+        return entries;
+    }
 
-    @XStreamImplicit
-    private final List<Entry> entry;
-
-    public XNFO(String schema, String c, List<Entry> entry) {
-        this.xmlnsSchema = schema;
-        this.c = c;
-        this.entry = entry;
+    public void setEntries(List<Entry> entries) {
+        this.entries = entries;
     }
 
     public void stripComments() {
-        List<Comment> oldList = entry.get(0).getCommentsList();
+        List<Comment> oldList = entries.getFirst().getConfig().getCm();
         List<Comment> newList = new ArrayList<>();
         for (Comment comment : oldList) {
-            String name = comment.getName();
+            String name = comment.getN();
             if (name.contains("O::")) {
                 name = name.replaceAll("[A-Z]::", "");
-                comment.setName(name);
-                comment.setComment(comment.getComment().strip());
+                comment.setN(name);
+                if (null != comment.getText()) {
+                    comment.setText(comment.getText().strip());
+                } else {
+                    comment.setText("");
+                }
+
                 newList.add(comment);
             }
         }
-        entry.get(0).setCommentsList(newList);
-    }
-
-    public List<Comment> getCommentList() {
-        return this.entry.get(0).getCommentsList();
-    }
-
-    /**
-     * @return the xmlnsSchema
-     */
-    public String getXmlnsSchema() {
-        return xmlnsSchema;
-    }
-
-    /**
-     * @return the c
-     */
-    public String getC() {
-        return c;
+        entries.getFirst().getConfig().setCm(newList);
     }
 }
