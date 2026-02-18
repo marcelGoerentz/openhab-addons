@@ -17,12 +17,11 @@ import static org.openhab.binding.evcc.internal.EvccBindingConstants.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.openhab.binding.evcc.internal.EvccBindingConstants;
 import org.openhab.binding.evcc.internal.discovery.Utils;
-import org.openhab.binding.evcc.internal.handler.EvccBridgeHandler;
+import org.openhab.binding.evcc.internal.handler.EvccWsBridgeHandler;
 import org.openhab.core.config.discovery.DiscoveryResult;
 import org.openhab.core.config.discovery.DiscoveryResultBuilder;
 import org.openhab.core.thing.ThingUID;
@@ -41,16 +40,15 @@ import com.google.gson.JsonObject;
 public class BatteryDiscoveryMapper implements EvccDiscoveryMapper {
 
     @Override
-    public Collection<DiscoveryResult> discover(JsonObject state, EvccBridgeHandler bridgeHandler) {
+    public Collection<DiscoveryResult> discover(JsonObject state, EvccWsBridgeHandler bridgeHandler) {
         List<DiscoveryResult> results = new ArrayList<>();
-        JsonArray batteries = state.getAsJsonArray(JSON_KEY_BATTERY);
+        JsonArray batteries = state.getAsJsonObject(JSON_KEY_BATTERY).getAsJsonArray("devices");
         if (batteries == null) {
             return results;
         }
         for (int i = 0; i < batteries.size(); i++) {
             JsonObject battery = batteries.get(i).getAsJsonObject();
-            String title = battery.has(JSON_KEY_TITLE)
-                    ? battery.get(JSON_KEY_TITLE).getAsString().toLowerCase(Locale.ROOT)
+            String title = battery.has(JSON_KEY_TITLE) ? battery.get(JSON_KEY_TITLE).getAsString()
                     : JSON_KEY_BATTERY + i;
 
             ThingUID uid = new ThingUID(EvccBindingConstants.THING_TYPE_BATTERY, bridgeHandler.getThing().getUID(),
