@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -42,6 +43,7 @@ import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingStatus;
 import org.openhab.core.thing.ThingStatusDetail;
+import org.openhab.core.thing.ThingStatusInfo;
 import org.openhab.core.thing.ThingTypeUID;
 import org.openhab.core.thing.binding.BaseThingHandler;
 import org.openhab.core.thing.binding.builder.ChannelBuilder;
@@ -63,6 +65,10 @@ import org.slf4j.LoggerFactory;
  * sent to one of the channels.
  *
  * @author Markus Eckhardt - Initial contribution
+ * @author Marcel Goerentz - Added bridgeStatusChanged override so children recover once the bridge finishes
+ *         initializing; fixed potential-null-pointer compiler warnings from repeated unchecked map lookups; added
+ *         upfront placeholder channel type registration to avoid a startup race in ThingManager's config
+ *         normalization for previously persisted channels
  */
 @NonNullByDefault
 public class KM200ThingHandler extends BaseThingHandler {
@@ -80,6 +86,25 @@ public class KM200ThingHandler extends BaseThingHandler {
     public KM200ThingHandler(Thing thing, KM200ChannelTypeProvider channelTypeProvider) {
         super(thing);
         this.channelTypeProvider = channelTypeProvider;
+        /*
+         * Channel types for this thing are (re-)created lazily in initialize(), once the bridge has been queried.
+         * On a restart, however, the thing is loaded from storage with its previous run's channels already in
+         * place, and the framework can try to normalize its configuration before initialize() has had a chance to
+         * run. Pre-registering a channel type derived from each already persisted channel's own stored metadata
+         * closes that window; initialize() below then replaces these placeholders with the fully-derived types.
+         */
+        for (Channel channel : thing.getChannels()) {
+            ChannelTypeUID channelTypeUID = channel.getChannelTypeUID();
+            String itemType = channel.getAcceptedItemType();
+            if (channelTypeUID != null && itemType != null
+                    && channelTypeProvider.getChannelType(channelTypeUID, null) == null) {
+                ChannelType placeholderType = ChannelTypeBuilder
+                        .state(channelTypeUID, Objects.requireNonNullElse(channel.getLabel(), channelTypeUID.getId()),
+                                itemType)
+                        .withDescription(Objects.requireNonNullElse(channel.getDescription(), "")).build();
+                channelTypeProvider.addChannelType(placeholderType);
+            }
+        }
     }
 
     @Override
@@ -298,6 +323,23 @@ public class KM200ThingHandler extends BaseThingHandler {
         channelTypeProvider.removeChannelTypesForThing(getThing().getUID());
     }
 
+    @Override
+    public void bridgeStatusChanged(ThingStatusInfo bridgeStatusInfo) {
+        /*
+         * The bridge can still be discovering the gateway's capabilities when this thing is added, or it can
+         * temporarily lose communication with the gateway afterwards. Re-run initialize() whenever the bridge
+         * becomes ONLINE so that channels get (re-)created and the status is corrected in both cases; otherwise
+         * reflect the bridge's unavailability.
+         */
+        if (bridgeStatusInfo.getStatus() == ThingStatus.ONLINE) {
+            if (getThing().getStatus() != ThingStatus.ONLINE) {
+                initialize();
+            }
+        } else {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_OFFLINE);
+        }
+    }
+
     /**
      * Checks whether a channel is linked to an item
      */
@@ -310,7 +352,6 @@ public class KM200ThingHandler extends BaseThingHandler {
      */
     private void addChannels(KM200ServiceObject serObj, Thing thing, List<Channel> subChannels, String subNameAddon) {
         String service = serObj.getFullServiceName();
-        Set<String> subKeys = serObj.serviceTreeMap.keySet();
         List<String> asProperties = null;
         /* Some defines for dummy values, we will ignore such services */
         final BigDecimal maxInt16AsFloat = new BigDecimal(+3276.8).setScale(6, RoundingMode.HALF_UP);
@@ -322,7 +363,9 @@ public class KM200ThingHandler extends BaseThingHandler {
                 asProperties = tType.asBridgeProperties();
             }
         }
-        for (String subKey : subKeys) {
+        for (Map.Entry<String, KM200ServiceObject> subEntry : serObj.serviceTreeMap.entrySet()) {
+            String subKey = subEntry.getKey();
+            KM200ServiceObject subObj = subEntry.getValue();
             if (asProperties != null) {
                 if (asProperties.contains(subKey)) {
                     continue;
@@ -331,7 +374,7 @@ public class KM200ThingHandler extends BaseThingHandler {
             Map<String, String> properties = new HashMap<>(1);
             String root = service + "/" + subKey;
             properties.put("root", KM200Utils.translatesPathToName(root));
-            String subKeyType = serObj.serviceTreeMap.get(subKey).getServiceType();
+            String subKeyType = subObj.getServiceType();
             boolean readOnly;
             String unitOfMeasure = "";
             StateDescriptionFragment state = null;
@@ -339,7 +382,7 @@ public class KM200ThingHandler extends BaseThingHandler {
                     thing.getUID().getAsString() + ":" + subNameAddon + subKey);
             Channel newChannel = null;
             ChannelUID channelUID = new ChannelUID(thing.getUID(), subNameAddon + subKey);
-            if (serObj.serviceTreeMap.get(subKey).getWriteable() > 0) {
+            if (subObj.getWriteable() > 0) {
                 readOnly = false;
             } else {
                 readOnly = true;
@@ -352,11 +395,11 @@ public class KM200ThingHandler extends BaseThingHandler {
                 case DATA_TYPE_STRING_VALUE:
                     /* Creating a new channel type with capabilities from service */
                     List<StateOption> options = null;
-                    if (serObj.serviceTreeMap.get(subKey).getValueParameter() != null) {
+                    if (subObj.getValueParameter() != null) {
                         options = new ArrayList<>();
                         // The type is definitely correct here
                         @SuppressWarnings("unchecked")
-                        List<String> subValParas = (List<String>) serObj.serviceTreeMap.get(subKey).getValueParameter();
+                        List<String> subValParas = (List<String>) subObj.getValueParameter();
                         if (null != subValParas) {
                             for (String para : subValParas) {
                                 StateOption stateOption = new StateOption(para, para);
@@ -382,12 +425,12 @@ public class KM200ThingHandler extends BaseThingHandler {
                     BigDecimal maxVal = null;
                     BigDecimal step = null;
                     final BigDecimal val;
-                    Object tmpVal = serObj.serviceTreeMap.get(subKey).getValue();
+                    Object tmpVal = subObj.getValue();
                     if (tmpVal instanceof Double) {
                         continue;
                     }
                     /* Check whether the value is a dummy (e.g. not connected sensor) */
-                    val = (BigDecimal) serObj.serviceTreeMap.get(subKey).getValue();
+                    val = (BigDecimal) subObj.getValue();
                     if (val != null) {
                         if (val.setScale(6, RoundingMode.HALF_UP).equals(maxInt16AsFloat)
                                 || val.setScale(6, RoundingMode.HALF_UP).equals(minInt16AsFloat)
@@ -396,11 +439,11 @@ public class KM200ThingHandler extends BaseThingHandler {
                         }
                     }
                     /* Check the capabilities of this service */
-                    if (serObj.serviceTreeMap.get(subKey).getValueParameter() != null) {
+                    if (subObj.getValueParameter() != null) {
                         /* Creating a new channel type with capabilities from service */
                         // The type is definitely correct here
                         @SuppressWarnings("unchecked")
-                        List<Object> subValParas = (List<Object>) serObj.serviceTreeMap.get(subKey).getValueParameter();
+                        List<Object> subValParas = (List<Object>) subObj.getValueParameter();
                         if (null != subValParas) {
                             minVal = (BigDecimal) subValParas.get(0);
                             maxVal = (BigDecimal) subValParas.get(1);
@@ -444,10 +487,7 @@ public class KM200ThingHandler extends BaseThingHandler {
                         continue;
                     }
                     /* Search for new services in sub path */
-                    KM200ServiceObject obj = serObj.serviceTreeMap.get(subKey);
-                    if (obj != null) {
-                        addChannels(obj, thing, subChannels, subKey + "_");
-                    }
+                    addChannels(subObj, thing, subChannels, subKey + "_");
                     break;
                 case DATA_TYPE_ERROR_LIST:
                     if ("nbrErrors".equals(subKey) || "error".equals(subKey)) {

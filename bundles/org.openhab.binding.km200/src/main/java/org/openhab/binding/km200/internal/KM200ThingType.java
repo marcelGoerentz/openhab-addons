@@ -16,14 +16,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.core.thing.ThingTypeUID;
 
 /**
  * The KM200ThingType enum is representing the things
  *
  * @author Markus Eckhardt - Initial contribution
- *
+ * @author Marcel Goerentz - Fixed nullability of getActiveCheckSubPath() under @NonNullByDefault
  */
+@NonNullByDefault
 public enum KM200ThingType {
     GATEWAY("/gateway", KM200BindingConstants.THING_TYPE_GATEWAY) {
         @Override
@@ -48,7 +51,7 @@ public enum KM200ThingType {
         }
 
         @Override
-        public String getActiveCheckSubPath() {
+        public @Nullable String getActiveCheckSubPath() {
             return "status";
         }
     },
@@ -62,7 +65,7 @@ public enum KM200ThingType {
         }
 
         @Override
-        public String getActiveCheckSubPath() {
+        public @Nullable String getActiveCheckSubPath() {
             return "status";
         }
     },
@@ -71,7 +74,7 @@ public enum KM200ThingType {
 
     SOLARCIRCUIT("/solarCircuits", KM200BindingConstants.THING_TYPE_SOLAR_CIRCUIT) {
         @Override
-        public String getActiveCheckSubPath() {
+        public @Nullable String getActiveCheckSubPath() {
             return "status";
         }
     },
@@ -130,7 +133,7 @@ public enum KM200ThingType {
         return Collections.emptyList();
     }
 
-    public String getActiveCheckSubPath() {
+    public @Nullable String getActiveCheckSubPath() {
         return null;
     }
 

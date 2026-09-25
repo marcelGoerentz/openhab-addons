@@ -27,11 +27,6 @@
 				<description>Auto refresh interval in seconds</description>
 				<default>30</default>
 			</parameter>
-			<parameter name="readDelay" type="integer" required="true">
-				<label>Read Delay</label>
-				<description>Delay between two read attempts in ms</description>
-				<default>100</default>
-			</parameter>
 			<parameter name="maxNbrRepeats" type="integer" required="true">
 				<label>Maximum Number of Repeats</label>
 				<description>Maximum number of repeats in case of a communication error (like HTTP 500 error)</description>

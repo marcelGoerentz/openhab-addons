@@ -15,9 +15,10 @@ package org.openhab.binding.km200.internal;
 import static org.openhab.binding.km200.internal.KM200BindingConstants.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -34,6 +35,7 @@ import com.google.gson.JsonParser;
  * The KM200Device representing the device with its all capabilities
  *
  * @author Markus Eckhardt - Initial contribution
+ * @author Marcel Goerentz - Made shared discovery/runtime state thread-safe for concurrent access
  */
 @NonNullByDefault
 public class KM200Device {
@@ -52,7 +54,7 @@ public class KM200Device {
     protected String privatePassword = "";
 
     /* The returned device charset for communication */
-    protected String charSet = "";
+    protected volatile String charSet = "";
 
     /* Needed keys for the communication */
     protected byte[] cryptKeyInit = new byte[0];
@@ -61,22 +63,22 @@ public class KM200Device {
     /* Buderus_MD5Salt */
     protected byte[] md5Salt = new byte[0];
 
-    /* Device services */
+    /* Device services. Populated concurrently while services are being discovered, hence the concurrent map. */
     public Map<String, KM200ServiceObject> serviceTreeMap;
 
     /* Device services blacklist */
     private List<String> blacklistMap = new ArrayList<>();
-    /* List of virtual services */
+    /* List of virtual services. Populated concurrently while services are being discovered. */
     public List<KM200ServiceObject> virtualList;
 
     /* Is the first INIT done */
-    protected boolean isIited;
+    protected volatile boolean isIited;
 
     public KM200Device(HttpClient httpClient) {
-        serviceTreeMap = new HashMap<>();
+        serviceTreeMap = new ConcurrentHashMap<>();
         getBlacklistMap().add("/gateway/firmware");
         getBlacklistMap().add("/gateway/registrations");
-        virtualList = new ArrayList<>();
+        virtualList = new CopyOnWriteArrayList<>();
         comCryption = new KM200Cryption(this);
         deviceCommunicator = new KM200Comm<>(this, httpClient);
     }

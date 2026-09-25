@@ -12,8 +12,8 @@
  */
 package org.openhab.binding.km200.internal;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -24,27 +24,29 @@ import com.google.gson.JsonObject;
  * The KM200CommObject representing a service on a device with its all capabilities
  *
  * @author Markus Eckhardt - Initial contribution
+ * @author Marcel Goerentz - Made immutable fields final and mutable fields volatile for safe concurrent access
+ *         from the shared worker pool
  */
 @NonNullByDefault
 public class KM200ServiceObject {
-    private int readable;
-    private int writeable;
-    private int recordable;
-    private int virtual;
-    private boolean updated;
-    private @Nullable String parent;
-    private String fullServiceName;
-    private String serviceType;
-    private @Nullable JsonObject jsonData;
-    private @Nullable Object value;
-    private @Nullable Object valueParameter;
+    private final int readable;
+    private final int writeable;
+    private final int recordable;
+    private final int virtual;
+    private volatile boolean updated;
+    private final @Nullable String parent;
+    private final String fullServiceName;
+    private final String serviceType;
+    private volatile @Nullable JsonObject jsonData;
+    private volatile @Nullable Object value;
+    private volatile @Nullable Object valueParameter;
 
-    /* Device services */
-    public Map<String, KM200ServiceObject> serviceTreeMap;
+    /* Device services. Populated concurrently while services are being discovered, hence the concurrent map. */
+    public final Map<String, KM200ServiceObject> serviceTreeMap;
 
     public KM200ServiceObject(String fullServiceName, String serviceType, int readable, int writeable, int recordable,
             int virtual, @Nullable String parent) {
-        serviceTreeMap = new HashMap<>();
+        serviceTreeMap = new ConcurrentHashMap<>();
         this.fullServiceName = fullServiceName;
         this.serviceType = serviceType;
         this.readable = readable;

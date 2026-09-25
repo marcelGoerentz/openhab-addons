@@ -42,7 +42,6 @@ The _kmdevice_ bridge requires the following configuration parameters:
 | IP address                | ip4_address     | The IP address of the KM device                                                   | true     |                      | 192.168.1.10                                                     |
 | Refresh Interval          | refreshInterval | The refresh interval in seconds which is used to poll the device.                 | true     |    30                | 30                                                               |
 | Private Key               | privKey         | Take a look to the internet. Maybe you will find a way for generation.            | true     |                      | 0000FFFFEEEEDDDDCCCCBBBBAAAA999988887777666655554444333322221111 |
-| Read Delay                | readDelay       | Delay between two read attempts in ms.                                            | true     |    100               | 100                                                              |
 | Maximum Number Of Repeats | maxNbrRepeats   | Maximum number of repeats in case of a communication error (like HTTP 500 error). | true     |    10                | 10                                                               |
 
 ### Channels
@@ -59,7 +58,7 @@ This example reads different values of items from a KMXXX Device.
 `things/kmxxx.things`:
 
 ```java
-Bridge km200:kmdevice:0815 "testKMDevice" @ "Room" [ privateKey= "1234567890abcdef1234567890abcdef", maxnbrrepeats=10.0, readDelay=100, refreshInterval=30, maxNbrRepeats=10, ip4Address="192.168.1.111", refreshinterval=30.0, readdelay=100.0 ] {
+Bridge km200:kmdevice:0815 "testKMDevice" @ "Room" [ privateKey= "1234567890abcdef1234567890abcdef", maxNbrRepeats=10, refreshInterval=30, ip4Address="192.168.1.111" ] {
  heatingCircuit 1 "TestHC1"
  sensor 1 "TestSensors"
 }

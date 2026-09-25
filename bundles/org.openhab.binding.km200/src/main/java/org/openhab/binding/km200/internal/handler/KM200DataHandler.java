@@ -45,6 +45,8 @@ import com.google.gson.JsonParser;
  * The KM200DataHandler is managing the data handling between the device and items
  *
  * @author Markus Eckhardt - Initial contribution
+ * @author Marcel Goerentz - Replaced the device-wide read lock with per-service/per-parent locking so unrelated
+ *         channels can be read concurrently
  */
 @NonNullByDefault
 public class KM200DataHandler {
@@ -57,36 +59,34 @@ public class KM200DataHandler {
     }
 
     /**
-     * This function checks the state of a service on the device
+     * This function checks the state of a service on the device. Locking here is per-service (or per-parent for
+     * virtual services) rather than device-wide, so unrelated channels can be read concurrently while still
+     * de-duplicating concurrent requests for the very same (possibly shared, for virtual channels) service.
      */
     public @Nullable State getProvidersState(String service, String itemType, Map<String, String> itemPara) {
-        synchronized (remoteDevice) {
-            String type = null;
-            KM200ServiceObject object = null;
-            JsonObject jsonNode = null;
-
-            logger.trace("Check state of: {}  item: {}", service, itemType);
-            if (remoteDevice.getBlacklistMap().contains(service)) {
-                logger.warn("Service on blacklist: {}", service);
-                return null;
-            }
-            if (remoteDevice.containsService(service)) {
-                object = remoteDevice.getServiceObject(service);
-                if (null == object) {
-                    logger.warn("Serviceobject does not exist");
-                    return null;
-                }
-                if (object.getReadable() == 0) {
-                    logger.warn("Service is listed as protected (reading is not possible): {}", service);
-                    return null;
-                }
-                type = object.getServiceType();
-            } else {
-                logger.warn("Service is not in the determined device service list: {}", service);
-                return null;
-            }
-            /* Needs to be updated? */
-            if (object.getVirtual() == 0) {
+        logger.trace("Check state of: {}  item: {}", service, itemType);
+        if (remoteDevice.getBlacklistMap().contains(service)) {
+            logger.warn("Service on blacklist: {}", service);
+            return null;
+        }
+        if (!remoteDevice.containsService(service)) {
+            logger.warn("Service is not in the determined device service list: {}", service);
+            return null;
+        }
+        KM200ServiceObject object = remoteDevice.getServiceObject(service);
+        if (null == object) {
+            logger.warn("Serviceobject does not exist");
+            return null;
+        }
+        if (object.getReadable() == 0) {
+            logger.warn("Service is listed as protected (reading is not possible): {}", service);
+            return null;
+        }
+        String type = object.getServiceType();
+        JsonObject jsonNode;
+        /* Needs to be updated? */
+        if (object.getVirtual() == 0) {
+            synchronized (object) {
                 if (!object.getUpdated()) {
                     jsonNode = remoteDevice.getServiceNode(service);
                     if (jsonNode == null || jsonNode.isJsonNull()) {
@@ -99,34 +99,38 @@ public class KM200DataHandler {
                     /* If already updated then use the saved data */
                     jsonNode = object.getJSONData();
                 }
-            } else {
-                /* For using of virtual services only one receive on the parent service is needed */
-                String parent = object.getParent();
-                if (null != parent) {
-                    KM200ServiceObject objParent = remoteDevice.getServiceObject(parent);
-                    if (null != objParent) {
-                        if (!objParent.getUpdated()) {
-                            /* If it's a virtual service then receive the data from parent service */
-                            jsonNode = remoteDevice.getServiceNode(parent);
-                            if (jsonNode == null || jsonNode.isJsonNull()) {
-                                logger.warn("Communication is not possible!");
-                                return null;
-                            }
-                            objParent.setJSONData(jsonNode);
-                            objParent.setUpdated(true);
-                            object.setUpdated(true);
-                        } else {
-                            /* If already updated then use the saved data */
-                            jsonNode = objParent.getJSONData();
-                        }
-                    }
-                }
             }
-            if (null != jsonNode) {
-                return parseJSONData(jsonNode, type, service, itemType, itemPara);
-            } else {
+        } else {
+            /* For using of virtual services only one receive on the parent service is needed */
+            String parent = object.getParent();
+            if (null == parent) {
                 return null;
             }
+            KM200ServiceObject objParent = remoteDevice.getServiceObject(parent);
+            if (null == objParent) {
+                return null;
+            }
+            synchronized (objParent) {
+                if (!objParent.getUpdated()) {
+                    /* If it's a virtual service then receive the data from parent service */
+                    jsonNode = remoteDevice.getServiceNode(parent);
+                    if (jsonNode == null || jsonNode.isJsonNull()) {
+                        logger.warn("Communication is not possible!");
+                        return null;
+                    }
+                    objParent.setJSONData(jsonNode);
+                    objParent.setUpdated(true);
+                    object.setUpdated(true);
+                } else {
+                    /* If already updated then use the saved data */
+                    jsonNode = objParent.getJSONData();
+                }
+            }
+        }
+        if (null != jsonNode) {
+            return parseJSONData(jsonNode, type, service, itemType, itemPara);
+        } else {
+            return null;
         }
     }
 
@@ -368,7 +372,7 @@ public class KM200DataHandler {
                                     state = new DecimalType(minutes);
                                 } else if (CoreItemFactory.DATETIME.equals(itemType)) {
                                     Integer minutes = sPService.getActivePositiveSwitch();
-                                    ZonedDateTime rightNow = ZonedDateTime.now();
+                                    ZonedDateTime rightNow = ZonedDateTime.now(ZoneId.systemDefault());
                                     rightNow.minusHours(rightNow.getHour());
                                     rightNow.minusMinutes(rightNow.getMinute());
                                     rightNow.plusSeconds(minutes * 60 - rightNow.getOffset().getTotalSeconds());
@@ -383,7 +387,7 @@ public class KM200DataHandler {
                                     state = new DecimalType(minutes);
                                 } else if (CoreItemFactory.DATETIME.equals(itemType)) {
                                     Integer minutes = sPService.getActiveNegativeSwitch();
-                                    ZonedDateTime rightNow = ZonedDateTime.now();
+                                    ZonedDateTime rightNow = ZonedDateTime.now(ZoneId.systemDefault());
                                     rightNow.minusHours(rightNow.getHour());
                                     rightNow.minusMinutes(rightNow.getMinute());
                                     rightNow.plusSeconds(minutes * 60 - rightNow.getOffset().getTotalSeconds());

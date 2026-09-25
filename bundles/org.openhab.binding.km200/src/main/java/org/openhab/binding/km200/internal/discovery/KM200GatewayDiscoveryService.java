@@ -16,7 +16,6 @@ import static org.openhab.binding.km200.internal.KM200BindingConstants.*;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.openhab.binding.km200.internal.KM200ServiceObject;
@@ -37,6 +36,7 @@ import org.slf4j.LoggerFactory;
  * The {@link KM200GatewayDiscoveryService} class discovers things through a gateway
  *
  * @author Markus Eckhardt - Initial contribution
+ * @author Marcel Goerentz - Fixed potential-null-pointer compiler warnings from repeated unchecked map lookups
  */
 @NonNullByDefault
 public class KM200GatewayDiscoveryService extends AbstractDiscoveryService implements KM200GatewayStatusListener {
@@ -99,17 +99,18 @@ public class KM200GatewayDiscoveryService extends AbstractDiscoveryService imple
                     logger.warn("No root service object found");
                     return;
                 }
-                Set<String> keys = object.serviceTreeMap.keySet();
                 /* Check whether all sub services are refEnum */
-                for (String key : keys) {
-                    if (!DATA_TYPE_REF_ENUM.equals(object.serviceTreeMap.get(key).getServiceType())) {
+                for (KM200ServiceObject subObject : object.serviceTreeMap.values()) {
+                    if (!DATA_TYPE_REF_ENUM.equals(subObject.getServiceType())) {
                         enumOnly = false;
                         break;
                     }
                 }
                 /* If there are refEnum only, then create for every one an own thing */
                 if (enumOnly) {
-                    for (String key : keys) {
+                    for (Map.Entry<String, KM200ServiceObject> entry : object.serviceTreeMap.entrySet()) {
+                        String key = entry.getKey();
+                        KM200ServiceObject keyObject = entry.getValue();
                         /* Check whether this part of heating system is inactive. If its then ignore it */
                         if (checkService != null) {
                             String checkServicePath = root + "/" + key + "/" + checkService;
@@ -130,14 +131,12 @@ public class KM200GatewayDiscoveryService extends AbstractDiscoveryService imple
                         DiscoveryResult discoveryResult = DiscoveryResultBuilder.create(thingUID).withBridge(bridgeUID)
                                 .withLabel(key).withProperties(properties).build();
                         thingDiscovered(discoveryResult);
-                        if (object.serviceTreeMap.get(key).serviceTreeMap.containsKey(SWITCH_PROGRAM_PATH_NAME)) {
+                        if (keyObject.serviceTreeMap.containsKey(SWITCH_PROGRAM_PATH_NAME)) {
                             String currentPathName = root + "/" + key + "/" + SWITCH_PROGRAM_CURRENT_PATH_NAME;
                             String currParaRepl = SWITCH_PROGRAM_REPLACEMENT;
-                            boolean currExists = object.serviceTreeMap.get(key).serviceTreeMap
-                                    .containsKey(SWITCH_PROGRAM_CURRENT_PATH_NAME);
+                            boolean currExists = keyObject.serviceTreeMap.containsKey(SWITCH_PROGRAM_CURRENT_PATH_NAME);
 
-                            KM200ServiceObject switchObject = object.serviceTreeMap.get(key).serviceTreeMap
-                                    .get(SWITCH_PROGRAM_PATH_NAME);
+                            KM200ServiceObject switchObject = keyObject.serviceTreeMap.get(SWITCH_PROGRAM_PATH_NAME);
                             if (switchObject != null) {
                                 if (switchObject.serviceTreeMap.isEmpty()) {
                                     continue;

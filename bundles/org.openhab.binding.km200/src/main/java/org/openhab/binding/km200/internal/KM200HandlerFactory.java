@@ -53,7 +53,7 @@ import org.slf4j.LoggerFactory;
 @Component(service = ThingHandlerFactory.class, configurationPid = "binding.km200")
 public class KM200HandlerFactory extends BaseThingHandlerFactory {
 
-    public final Set<ThingTypeUID> SUPPORTED_ALL_THING_TYPES_UIDS = Collections
+    public static final Set<ThingTypeUID> SUPPORTED_ALL_THING_TYPES_UIDS = Collections
             .unmodifiableSet(Stream.concat(KM200GatewayHandler.SUPPORTED_THING_TYPES_UIDS.stream(),
                     KM200ThingHandler.SUPPORTED_THING_TYPES_UIDS.stream()).collect(Collectors.toSet()));
 

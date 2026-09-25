@@ -33,6 +33,8 @@ import org.osgi.service.component.annotations.Component;
  * Extends the ChannelTypeProvider for user defined channel and channel group types.
  *
  * @author Markus Eckhardt - Initial contribution
+ * @author Marcel Goerentz - Made addChannelType() an upsert so re-registering a channel type (e.g. on
+ *         re-initialization) replaces the previous definition instead of shadowing it with a stale duplicate
  */
 @Component(service = { ChannelTypeProvider.class, ChannelGroupTypeProvider.class, KM200ChannelTypeProvider.class })
 @NonNullByDefault
@@ -72,6 +74,7 @@ public class KM200ChannelTypeProvider implements ChannelTypeProvider, ChannelGro
     }
 
     public void addChannelType(ChannelType type) {
+        channelTypes.removeIf(existing -> existing.getUID().equals(type.getUID()));
         channelTypes.add(type);
     }
 

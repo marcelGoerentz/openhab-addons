@@ -16,6 +16,8 @@ import static org.openhab.binding.km200.internal.KM200BindingConstants.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -31,6 +33,7 @@ import com.google.gson.JsonObject;
  * The KM200DataHandler is representing one service on the device
  *
  * @author Markus Eckhardt - Initial contribution
+ * @author Marcel Goerentz - Made discovery asynchronous and concurrent via an injected Executor
  */
 @NonNullByDefault
 public class KM200ServiceHandler {
@@ -40,30 +43,34 @@ public class KM200ServiceHandler {
     private final String service;
     private final @Nullable KM200ServiceObject parent;
     private final KM200Device remoteDevice;
+    private final Executor executor;
 
-    public KM200ServiceHandler(String service, @Nullable KM200ServiceObject parent, KM200Device remoteDevice) {
+    public KM200ServiceHandler(String service, @Nullable KM200ServiceObject parent, KM200Device remoteDevice,
+            Executor executor) {
         this.service = service;
         this.parent = parent;
         this.remoteDevice = remoteDevice;
+        this.executor = executor;
     }
 
     /**
-     * This function starts the object's initialization
+     * Starts the object's initialization. The (blocking) HTTP request to fetch the node is dispatched on the
+     * given {@link Executor} so that sibling services can be discovered concurrently; the returned future
+     * completes once this service and all its children have been discovered.
      */
-    public void initObject() {
-        JsonObject nodeRoot;
+    public CompletableFuture<Void> initObject() {
         if (remoteDevice.getBlacklistMap().contains(service)) {
             logger.debug("Blacklisted: {}", service);
-            return;
+            return CompletableFuture.completedFuture(null);
         }
-        if (null == remoteDevice.getServiceNode(service)) {
-            logger.debug("initDevice: nodeRoot == null for service: {}", service);
-            return;
-        }
-        nodeRoot = remoteDevice.getServiceNode(service);
-        if (null != nodeRoot) {
-            determineServiceObject(createServiceObject(nodeRoot), nodeRoot);
-        }
+        return CompletableFuture.supplyAsync(() -> remoteDevice.getServiceNode(service), executor)
+                .thenCompose(nodeRoot -> {
+                    if (nodeRoot == null) {
+                        logger.debug("initDevice: nodeRoot == null for service: {}", service);
+                        return CompletableFuture.completedFuture((Void) null);
+                    }
+                    return determineServiceObject(createServiceObject(nodeRoot), nodeRoot);
+                });
     }
 
     /**
@@ -102,13 +109,14 @@ public class KM200ServiceHandler {
     }
 
     /**
-     * This function determines the service's capabilities
+     * This function determines the service's capabilities. Discovery of child services (refEnum/moduleList) is
+     * dispatched concurrently; the returned future completes once all of them finished.
      */
-    public void determineServiceObject(KM200ServiceObject serviceObject, JsonObject nodeRoot) {
+    public CompletableFuture<Void> determineServiceObject(KM200ServiceObject serviceObject, JsonObject nodeRoot) {
         /* Check the service features and set the flags */
-        String id = null;
         Object valObject = null;
         JsonObject dataObject = serviceObject.getJSONData();
+        CompletableFuture<Void> childrenDiscovered = CompletableFuture.completedFuture(null);
         if (null != dataObject) {
             switch (serviceObject.getServiceType()) {
                 case DATA_TYPE_STRING_VALUE: /*
@@ -171,22 +179,28 @@ public class KM200ServiceHandler {
                 case DATA_TYPE_REF_ENUM: /* Check whether the type is a refEnum */
                     logger.trace("initDevice: type refEnum: {}", dataObject);
                     JsonArray refers = nodeRoot.get("references").getAsJsonArray();
+                    List<CompletableFuture<Void>> referFutures = new ArrayList<>();
                     for (int i = 0; i < refers.size(); i++) {
                         JsonObject subJSON = refers.get(i).getAsJsonObject();
-                        id = subJSON.get("id").getAsString();
-                        KM200ServiceHandler serviceHandler = new KM200ServiceHandler(id, serviceObject, remoteDevice);
-                        serviceHandler.initObject();
+                        String childId = subJSON.get("id").getAsString();
+                        KM200ServiceHandler serviceHandler = new KM200ServiceHandler(childId, serviceObject,
+                                remoteDevice, executor);
+                        referFutures.add(serviceHandler.initObject());
                     }
+                    childrenDiscovered = CompletableFuture.allOf(referFutures.toArray(new CompletableFuture<?>[0]));
                     break;
                 case DATA_TYPE_MODULE_LIST: /* Check whether the type is a moduleList */
                     logger.trace("initDevice: type moduleList: {}", dataObject);
                     JsonArray vals = nodeRoot.get("values").getAsJsonArray();
+                    List<CompletableFuture<Void>> valFutures = new ArrayList<>();
                     for (int i = 0; i < vals.size(); i++) {
                         JsonObject subJSON = vals.get(i).getAsJsonObject();
-                        id = subJSON.get("id").getAsString();
-                        KM200ServiceHandler serviceHandler = new KM200ServiceHandler(id, serviceObject, remoteDevice);
-                        serviceHandler.initObject();
+                        String childId = subJSON.get("id").getAsString();
+                        KM200ServiceHandler serviceHandler = new KM200ServiceHandler(childId, serviceObject,
+                                remoteDevice, executor);
+                        valFutures.add(serviceHandler.initObject());
                     }
+                    childrenDiscovered = CompletableFuture.allOf(valFutures.toArray(new CompletableFuture<?>[0]));
                     break;
                 case DATA_TYPE_Y_RECORDING: /* Check whether the type is a yRecording */
                     logger.trace("initDevice: type yRecording: {}", dataObject);
@@ -219,10 +233,12 @@ public class KM200ServiceHandler {
             }
         }
         String[] servicePath = service.split("/");
-        if (null != parent) {
-            parent.serviceTreeMap.put(servicePath[servicePath.length - 1], serviceObject);
+        KM200ServiceObject parentObject = parent;
+        if (null != parentObject) {
+            parentObject.serviceTreeMap.put(servicePath[servicePath.length - 1], serviceObject);
         } else {
             remoteDevice.serviceTreeMap.put(servicePath[servicePath.length - 1], serviceObject);
         }
+        return childrenDiscovered;
     }
 }
